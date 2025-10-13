@@ -9,18 +9,17 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up()
+    public function up()
     {
         Schema::table('pengajuan_items', function (Blueprint $table) {
-            $table->string('kode_akun')->nullable();
-            $table->integer('ongkir')->default(0);
+            $table->string('uraian')->nullable();
         });
     }
 
     public function down()
     {
         Schema::table('pengajuan_items', function (Blueprint $table) {
-            $table->dropColumn(['kode_akun', 'ongkir']);
+            $table->dropColumn('uraian');
         });
     }
 

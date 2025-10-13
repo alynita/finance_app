@@ -30,15 +30,15 @@
                 <td>{{ $pengajuan->nama_kegiatan ?? '-' }}</td>
                 <td>{{ ucfirst($pengajuan->status) }}</td>
                 <td>
-                    @if(auth()->user()->role == 'adum' && $pengajuan->status == 'pending' ||
-                        auth()->user()->role == 'ppk' && $pengajuan->status == 'approved_adum')
+                    @if(auth()->user()->role == 'adum' && $pengajuan->status == 'pending_adum' ||
+                        auth()->user()->role == 'ppk' && $pengajuan->status == 'pending_ppk')
 
-                        <form method="POST" action="{{ route('approve.approve', $pengajuan->id) }}" style="display:inline;" onsubmit="return confirmApprove(event)">
+                        <form method="POST" action="{{ route('adum.approve', $pengajuan->id) }}" style="display:inline;" onsubmit="return confirmApprove(event)">
                             @csrf
                             <button type="submit" style="background: green; color: white; padding: 5px 10px; border:none; border-radius:3px;">Approve</button>
                         </form>
 
-                        <form method="POST" action="{{ route('approve.reject', $pengajuan->id) }}" style="display:inline;" onsubmit="return confirmReject(event)">
+                        <form method="POST" action="{{ route('adum.reject', $pengajuan->id) }}" style="display:inline;" onsubmit="return confirmReject(event)">
                             @csrf
                             <button type="submit" style="background: red; color: white; padding: 5px 10px; border:none; border-radius:3px;">Reject</button>
                         </form>

@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Pengajuan;
 use App\Models\Laporan;
 use App\Models\Profile;
+use Illuminate\Support\Facades\Auth;
 
 class ApproveController extends Controller
 {
@@ -13,14 +14,20 @@ class ApproveController extends Controller
     {
         $user = auth()->user();
 
-        if($user->role == 'adum'){
+        if ($user->role === 'pj') {
+            $pengajuans = Pengajuan::with('items', 'user')
+                ->where('status', 'pending_pj')
+                ->get();
+        } elseif ($user->role === 'adum') {
             $pengajuans = Pengajuan::with('items', 'user')
                 ->where('status', 'pending_adum')
                 ->get();
-        } elseif($user->role == 'ppk'){
+        } elseif ($user->role === 'ppk') {
             $pengajuans = Pengajuan::with('items', 'user')
                 ->where('status', 'pending_ppk')
                 ->get();
+        } else {
+            $pengajuans = collect();
         }
 
         return view('approve.dashboard', compact('pengajuans', 'user'));
@@ -35,31 +42,64 @@ class ApproveController extends Controller
     public function approve($id)
     {
         $pengajuan = Pengajuan::findOrFail($id);
-        $userRole = auth()->user()->role;
+        $user = auth()->user();
 
-        if ($userRole === 'adum') {
-            $pengajuan->status = 'pending_ppk'; // lanjut ke PPK
-            $pengajuan->approved_by = 'adum';
-        } elseif ($userRole === 'ppk') {
-            $pengajuan->status = 'approve'; // final approve
-            $pengajuan->approved_by = 'ppk';
+        switch ($user->role) {
+            case 'pj':
+                $pengajuan->pj_id = $user->id;
+                $pengajuan->pj_approved_at = now();
+                $pengajuan->status = 'pending_adum';
+                break;
+
+            case 'adum':
+                if ($pengajuan->status !== 'pending_adum') {
+                    return back()->with('error', 'Harus di-approve PJ dulu!');
+                }
+                $pengajuan->adum_id = $user->id;
+                $pengajuan->adum_approved_at = now();
+                $pengajuan->status = 'pending_ppk';
+                break;
+
+            case 'ppk':
+                if ($pengajuan->status !== 'pending_ppk') {
+                    return back()->with('error', 'Harus di-approve ADUM dulu!');
+                }
+                $pengajuan->ppk_id = $user->id;
+                $pengajuan->ppk_approved_at = now();
+                $pengajuan->status = 'approved';
+                break;
+                
+                return redirect()->route('adum.laporan')->with('success', 'Pengajuan berhasil di-approve!');
+            default:
+                return back()->with('error', 'Role tidak memiliki hak approve.');
         }
 
-        $pengajuan->approved_at = now();
         $pengajuan->save();
-
-        return redirect()->back()->with('success', 'Pengajuan berhasil diapprove!');
+        return back()->with('success', 'Pengajuan berhasil di-approve!');
     }
 
     public function reject($id)
     {
         $pengajuan = Pengajuan::findOrFail($id);
-        $pengajuan->status = 'reject';
-        $pengajuan->approved_by = auth()->user()->role;
-        $pengajuan->approved_at = now();
-        $pengajuan->save();
+        $user = auth()->user();
 
-        return redirect()->back()->with('error', 'Pengajuan ditolak.');
+        switch ($user->role) {
+            case 'pj':
+                $pengajuan->status = 'rejected_pj';
+                $pengajuan->pj_id = $user->id;
+                break;
+            case 'adum':
+                $pengajuan->status = 'rejected_adum';
+                $pengajuan->adum_id = $user->id;
+                break;
+            case 'ppk':
+                $pengajuan->status = 'rejected_ppk';
+                $pengajuan->ppk_id = $user->id;
+                break;
+        }
+
+        $pengajuan->save();
+        return back()->with('error', 'Pengajuan ditolak!');
     }
 
     public function laporan(Request $request)

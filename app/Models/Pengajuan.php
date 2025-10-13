@@ -17,8 +17,9 @@ class Pengajuan extends Model
         'waktu_kegiatan',
         'jenis_pengajuan',
         'status',
-        'adum_id', // tambahkan
-        'ppk_id',  // tambahkan
+        'pj_id',
+        'adum_id',
+        'ppk_id',
     ];
 
     // relasi ke item pengajuan
@@ -27,10 +28,22 @@ class Pengajuan extends Model
         return $this->hasMany(PengajuanItem::class, 'pengajuan_id');
     }
 
+    // relasi ke honorarium
+    public function honorariums()
+    {
+        return $this->hasMany(Honorarium::class, 'pengajuan_id');
+    }
+
     // relasi ke user pengaju
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // relasi ke PJ 
+    public function pj()
+    {
+        return $this->belongsTo(PenanggungJawab::class, 'pj_id');
     }
 
     // relasi ke ADUM (user yang approve sebagai ADUM)

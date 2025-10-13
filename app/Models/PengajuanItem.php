@@ -27,11 +27,38 @@ class PengajuanItem extends Model
         'jabatan',
         'tipe_item',
         'updated_at',
-        'created_at'
+        'created_at',
+        'uraian', 
+        'jumlah_dana_pengajuan',
+        'pph21', 
+        'pph22', 
+        'pph23', 
+        'ppn', 
+        'dibayarkan',
+        'no_rekening',
+        'bank',
+        'invoice'
     ];
 
     public function pengajuan()
     {
         return $this->belongsTo(Pengajuan::class);
+    }
+
+    // 💡 otomatis hitung jumlah_dana_pengajuan saat membuat item
+    protected static function booted()
+    {
+        static::creating(function ($item) {
+            if ($item->tipe_item === 'barang') { // pembelian
+                $volume = $item->volume ?? 0;
+                $harga_satuan = $item->harga_satuan ?? 0;
+                $ongkos_kirim = $item->ongkos_kirim ?? 0;
+                $item->jumlah_dana_pengajuan = ($volume * $harga_satuan) + $ongkos_kirim;
+            } elseif ($item->tipe_item === 'kerusakan') {
+                $volume = $item->volume ?? 0;
+                $harga_satuan = $item->harga_satuan ?? 0;
+                $item->jumlah_dana_pengajuan = $volume * $harga_satuan;
+            }
+        });
     }
 }

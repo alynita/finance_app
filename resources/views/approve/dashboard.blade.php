@@ -34,21 +34,21 @@
                 <td style="border:1px solid #ccc; padding:0.5rem;">{{ $pengajuan->user->name }}</td>
                 <td style="border:1px solid #ccc; padding:0.5rem;">{{ ucfirst($pengajuan->status) }}</td>
                 <td style="border:1px solid #ccc; padding:0.5rem; display:flex; gap:0.5rem;">
-                    @if($user->role === 'adum' && $pengajuan->status === 'pending')
-                        <form action="{{ route('approve.approve', $pengajuan->id) }}" method="POST">
+                    @if($user->role === 'adum' && $pengajuan->status === 'pending_adum')
+                        <form action="{{ route('adum.approve', $pengajuan->id) }}" method="POST">
                             @csrf
                             <button type="submit" style="padding:0.3rem 0.6rem; background:#4CAF50; color:white; border:none; border-radius:4px;">Approve</button>
                         </form>
-                        <form action="{{ route('approve.reject', $pengajuan->id) }}" method="POST">
+                        <form action="{{ route('adum.reject', $pengajuan->id) }}" method="POST">
                             @csrf
                             <button type="submit" style="padding:0.3rem 0.6rem; background:#f44336; color:white; border:none; border-radius:4px;">Reject</button>
                         </form>
-                    @elseif($user->role === 'ppk' && $pengajuan->status === 'approved_adum')
-                        <form action="{{ route('approve.approve', $pengajuan->id) }}" method="POST">
+                    @elseif($user->role === 'ppk' && $pengajuan->status === 'pending_ppk')
+                        <form action="{{ route('ppk.approve', $pengajuan->id) }}" method="POST">
                             @csrf
                             <button type="submit" style="padding:0.3rem 0.6rem; background:#4CAF50; color:white; border:none; border-radius:4px;">Approve</button>
                         </form>
-                        <form action="{{ route('approve.reject', $pengajuan->id) }}" method="POST">
+                        <form action="{{ route('ppk.reject', $pengajuan->id) }}" method="POST">
                             @csrf
                             <button type="submit" style="padding:0.3rem 0.6rem; background:#f44336; color:white; border:none; border-radius:4px;">Reject</button>
                         </form>

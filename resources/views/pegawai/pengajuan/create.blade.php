@@ -26,6 +26,14 @@
                 <option value="pembelian">Pengajuan Pembelian Barang</option>
                 <option value="honor">Honorarium</option>
             </select>
+
+            <label>Penanggung Jawab</label>
+            <select name="pj_id" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+                <option value="">-- Pilih Penanggung Jawab --</option>
+                @foreach($penanggungJawabs as $pj)
+                    <option value="{{ $pj->id }}">{{ $pj->nama }} - {{ $pj->jabatan }}</option>
+                @endforeach
+            </select>
         </div>
 
         <!-- Detail Item -->
@@ -76,11 +84,11 @@ function tambahItem() {
             <label>Jenis Kerusakan</label>
             <input type="text" name="items[${itemCount}][jenis_kerusakan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
             <label>Volume</label>
-            <input type="number" class="vol" name="items[${itemCount}][vol]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+            <input type="number" class="volume" name="items[${itemCount}][volume]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
             <label>Harga Satuan</label>
             <input type="number" class="harga_satuan" name="items[${itemCount}][harga_satuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
             <label>Jumlah Dana</label>
-            <input type="number" class="jumlah_dana" name="items[${itemCount}][jumlah_dana_pengajuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" readonly required>
+            <input type="number" class="jumlah_dana_pengajuan" name="items[${itemCount}][jumlah_dana_pengajuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" readonly required>
             <label>Foto (opsional)</label>
             <input type="file" name="items[${itemCount}][foto]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;">
         `;
@@ -94,11 +102,11 @@ function tambahItem() {
             <label>Harga Satuan</label>
             <input type="number" class="harga_satuan" name="items[${itemCount}][harga_satuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
             <label>Volume</label>
-            <input type="number" class="vol" name="items[${itemCount}][vol]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
-            <label>Jumlah Dana</label>
-            <input type="number" class="jumlah_dana" name="items[${itemCount}][jumlah_dana_pengajuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" readonly required>
+            <input type="number" class="volume" name="items[${itemCount}][volume]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
             <label>Ongkos Kirim</label>
-            <input type="number" name="items[${itemCount}][ongkir]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+            <input type="number" name="items[${itemCount}][ongkos_kirim]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+            <label>Jumlah Dana</label>
+            <input type="number" class="jumlah_dana_pengajuan" name="items[${itemCount}][jumlah_dana_pengajuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" readonly required>
         `;
     } else if(currentJenis === 'honor') {
         html += `
@@ -118,18 +126,27 @@ function tambahItem() {
 
     // Hitung Jumlah Dana otomatis
     if(currentJenis === 'kerusakan' || currentJenis === 'pembelian') {
-        const volInput = div.querySelector('.vol');
+        const volInput = div.querySelector('.volume');
         const hargaInput = div.querySelector('.harga_satuan');
-        const jumlahDanaInput = div.querySelector('.jumlah_dana');
+        const ongkirInput = div.querySelector('input[name$="[ongkos_kirim]"]'); // cuma ada di pembelian
+        const jumlahDanaInput = div.querySelector('.jumlah_dana_pengajuan');
 
         function updateJumlahDana() {
             const vol = parseFloat(volInput.value) || 0;
             const harga = parseFloat(hargaInput.value) || 0;
-            jumlahDanaInput.value = vol * harga;
+            let jumlah = vol * harga;
+
+            if(currentJenis === 'pembelian') {
+                const ongkos_kirim = parseFloat(ongkirInput.value) || 0;
+                jumlah += ongkos_kirim;
+            }
+
+            jumlahDanaInput.value = jumlah;
         }
 
         volInput.addEventListener('input', updateJumlahDana);
         hargaInput.addEventListener('input', updateJumlahDana);
+        if(currentJenis === 'pembelian') ongkirInput.addEventListener('input', updateJumlahDana);
     }
 
     itemCount++;

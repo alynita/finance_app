@@ -5,6 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\ApproveController;
+use App\Http\Controllers\PenanggungJawabController;
+use App\Http\Controllers\KeuanganController;
+use App\Http\Controllers\ProsesKeuanganController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -16,21 +19,24 @@ Route::get('/dashboard', function () {
 
 //**Pegawai */
 Route::middleware('auth')->group(function () {
-    Route::get('/pegawai/dashboard', [PegawaiController::class, 'dashboard'])
-        ->name('pegawai.dashboard');
+    Route::get('/pegawai/dashboard', [PegawaiController::class, 'dashboard'])->name('pegawai.dashboard');
+    Route::get('/pegawai/pengajuan', [PengajuanController::class, 'create'])->name('pegawai.pengajuan.create');
+    Route::post('/pegawai/pengajuan', [PengajuanController::class, 'store'])->name('pegawai.pengajuan.store');
+    Route::get('/pegawai/daftar-pengajuan', [PengajuanController::class, 'index'])->name('pegawai.daftar-pengajuan');
+    Route::get('/pegawai/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])->name('pegawai.pengajuan.show');
+});
 
-    Route::get('/pegawai/pengajuan', [PengajuanController::class, 'create'])
-        ->name('pegawai.pengajuan.create');
-        
-    Route::post('/pegawai/pengajuan', [PengajuanController::class, 'store'])
-        ->name('pegawai.pengajuan.store');
+Route::prefix('pegawai')->middleware(['auth'])->group(function() {
+    Route::get('penanggung-jawab', [\App\Http\Controllers\PenanggungJawabController::class, 'index'])->name('pegawai.penanggung_jawab.index');
+    Route::get('penanggung-jawab/create', [\App\Http\Controllers\PenanggungJawabController::class, 'create'])->name('pegawai.penanggung_jawab.create');
+    Route::post('penanggung-jawab', [\App\Http\Controllers\PenanggungJawabController::class, 'store'])->name('pegawai.penanggung_jawab.store');
+});
 
-    Route::get('/pegawai/daftar-pengajuan', [PengajuanController::class, 'index'])
-        ->name('pegawai.daftar-pengajuan');
-
-    Route::get('/pegawai/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])
-        ->name('pegawai.pengajuan.show');
-
+// Dashboard PJ
+Route::middleware('auth')->group(function() {
+    Route::get('/pj/dashboard', [PenanggungJawabController::class, 'dashboard'])->name('pj.dashboard');
+    Route::post('/pj/approve/{id}', [PenanggungJawabController::class, 'approve'])->name('pj.approve');
+    Route::post('/pj/reject/{id}', [PenanggungJawabController::class, 'reject'])->name('pj.reject');
 });
 
 //**ADUM/PPK */
@@ -46,8 +52,8 @@ Route::prefix('ppk')->middleware(['auth'])->group(function() {
     Route::get('/dashboard', [ApproveController::class, 'dashboard'])->name('ppk.dashboard');
     Route::get('/pengajuan', [ApproveController::class, 'pengajuan'])->name('ppk.pengajuan');
     Route::get('/laporan', [ApproveController::class, 'laporan'])->name('ppk.laporan');
-    Route::get('/approve/{id}', [ApproveController::class, 'approve'])->name('approve.approve');
-    Route::get('/reject/{id}', [ApproveController::class, 'reject'])->name('approve.reject');
+    Route::post('/approve/{id}', [ApproveController::class, 'approve'])->name('ppk.approve');
+    Route::post('/reject/{id}', [ApproveController::class, 'reject'])->name('ppk.reject');
 });
 
 // Laporan untuk Adum
@@ -57,6 +63,28 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/adum/laporan/excel', [App\Http\Controllers\ApproveController::class, 'laporanExcel'])->name('adum.laporan.excel');
 });
 
+//Keuangan
+Route::prefix('keuangan')->middleware(['auth'])->group(function() {
+    Route::get('/dashboard', [KeuanganController::class, 'dashboard'])->name('keuangan.dashboard');
+    Route::get('/proses/{id}', [KeuanganController::class, 'proses'])->name('keuangan.proses');
+    Route::post('/proses/{id}', [KeuanganController::class, 'storeProses'])->name('keuangan.storeProses');
+    Route::post('/simpan-honorarium/{id}', [KeuanganController::class, 'simpanHonorarium'])->name('keuangan.simpanHonorarium');
+    Route::post('/keuangan/approve/{id}', [KeuanganController::class, 'approveProcess'])->name('keuangan.approve.process');
+
+    Route::get('/laporan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
+});
+
+// Laporan Keuangan
+Route::middleware(['auth'])->group(function() {
+    Route::get('/laporan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
+    Route::get('/laporan/{id}', [KeuanganController::class, 'lihatDetail'])->name('keuangan.laporan_detail');
+});
+
+//Approve Proses ADUM & PPK
+Route::middleware(['auth'])->group(function() {
+    Route::get('/proses-keuangan', [ProsesKeuanganController::class, 'dashboard'])->name('proses.dashboard');
+    Route::get('/proses-keuangan/approve/{id}', [ProsesKeuanganController::class, 'approve'])->name('proses.approve');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
