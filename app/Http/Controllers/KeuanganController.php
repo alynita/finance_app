@@ -124,7 +124,7 @@ class KeuanganController extends Controller
     public function laporan()
     {
         // ambil semua pengajuan yang sudah diproses
-        $pengajuans = Pengajuan::where('status', 'processed')->get();
+        $pengajuans = Pengajuan::where('status', 'approved')->get();
         return view('keuangan.laporan', compact('pengajuans'));
     }
 
@@ -149,7 +149,7 @@ class KeuanganController extends Controller
 
         $pengajuan->save();
 
-        return redirect()->route('keuangan.laporan.detail', $id)
+        return redirect()->route('keuangan.laporan_detail', $id)
                         ->with('success', 'Proses keuangan berhasil di-approve.');
     }
 

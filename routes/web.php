@@ -26,19 +26,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/pegawai/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])->name('pegawai.pengajuan.show');
 });
 
-Route::prefix('pegawai')->middleware(['auth'])->group(function() {
-    Route::get('penanggung-jawab', [\App\Http\Controllers\PenanggungJawabController::class, 'index'])->name('pegawai.penanggung_jawab.index');
-    Route::get('penanggung-jawab/create', [\App\Http\Controllers\PenanggungJawabController::class, 'create'])->name('pegawai.penanggung_jawab.create');
-    Route::post('penanggung-jawab', [\App\Http\Controllers\PenanggungJawabController::class, 'store'])->name('pegawai.penanggung_jawab.store');
-});
-
-// Dashboard PJ
-Route::middleware('auth')->group(function() {
-    Route::get('/pj/dashboard', [PenanggungJawabController::class, 'dashboard'])->name('pj.dashboard');
-    Route::post('/pj/approve/{id}', [PenanggungJawabController::class, 'approve'])->name('pj.approve');
-    Route::post('/pj/reject/{id}', [PenanggungJawabController::class, 'reject'])->name('pj.reject');
-});
-
 //**ADUM/PPK */
 Route::prefix('adum')->middleware(['auth'])->group(function() {
     Route::get('/dashboard', [ApproveController::class, 'dashboard'])->name('adum.dashboard');

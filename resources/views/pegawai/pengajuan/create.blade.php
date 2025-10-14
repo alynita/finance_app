@@ -26,14 +26,6 @@
                 <option value="pembelian">Pengajuan Pembelian Barang</option>
                 <option value="honor">Honorarium</option>
             </select>
-
-            <label>Penanggung Jawab</label>
-            <select name="pj_id" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
-                <option value="">-- Pilih Penanggung Jawab --</option>
-                @foreach($penanggungJawabs as $pj)
-                    <option value="{{ $pj->id }}">{{ $pj->nama }} - {{ $pj->jabatan }}</option>
-                @endforeach
-            </select>
         </div>
 
         <!-- Detail Item -->

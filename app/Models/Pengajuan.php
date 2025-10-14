@@ -17,7 +17,6 @@ class Pengajuan extends Model
         'waktu_kegiatan',
         'jenis_pengajuan',
         'status',
-        'pj_id',
         'adum_id',
         'ppk_id',
     ];
@@ -38,12 +37,6 @@ class Pengajuan extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    // relasi ke PJ 
-    public function pj()
-    {
-        return $this->belongsTo(PenanggungJawab::class, 'pj_id');
     }
 
     // relasi ke ADUM (user yang approve sebagai ADUM)

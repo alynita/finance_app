@@ -16,7 +16,7 @@ class PegawaiController extends Controller
         $pengajuans = Pengajuan::where('user_id', $user->id)->get();
 
         // Hitung status
-        $pending = $pengajuans->whereIn('status', ['pending_pj', 'pending_adum', 'pending_ppk'])->count();
+        $pending = $pengajuans->whereIn('status', ['pending_adum', 'pending_ppk'])->count();
         $approved = $pengajuans->where('status', 'approved')->count();
         $rejected = $pengajuans->filter(fn($p) => str_starts_with($p->status,'rejected'))->count();
 

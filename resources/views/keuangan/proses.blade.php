@@ -20,9 +20,23 @@
     @endif
 
     {{-- Informasi dasar pengajuan --}}
-    <p><strong>Nama Kegiatan:</strong> {{ $pengajuan->nama_kegiatan }}</p>
-    <p><strong>Waktu Kegiatan:</strong> {{ $pengajuan->waktu_kegiatan }}</p>
-    <p><strong>Jenis Pengajuan:</strong> {{ ucfirst($pengajuan->jenis_pengajuan) }}</p>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+        <tr>
+            <td style="width:200px;"><strong>Nama Kegiatan</strong></td>
+            <td style="width:10px;">:</td>
+            <td>{{ $pengajuan->nama_kegiatan }}</td>
+        </tr>
+        <tr>
+            <td><strong>Waktu Kegiatan</strong></td>
+            <td>:</td>
+            <td>{{ $pengajuan->waktu_kegiatan }}</td>
+        </tr>
+        <tr>
+            <td><strong>Jenis Pengajuan</strong></td>
+            <td>:</td>
+            <td>{{ ucfirst($pengajuan->jenis_pengajuan) }}</td>
+        </tr>
+    </table>
 
     {{-- Form Proses Keuangan --}}
     <form action="{{ route('keuangan.storeProses', $pengajuan->id) }}" method="POST">
@@ -30,8 +44,9 @@
 
     {{-- Input Kode Akun --}}
     <div style="margin-bottom:15px;">
-        <label><strong>Kode Akun:</strong></label>
-        <input type="text" name="kode_akun" value="{{ $pengajuan->kode_akun ?? '' }}" style="width:200px; padding:0.5rem;">
+        <td><strong>Kode Akun</strong></td>
+        <td>:</td>
+        <td><input type="text" name="kode_akun" value="{{ $pengajuan->kode_akun ?? '' }}" style="width:200px; padding:0.5rem;"></td>
     </div>
 
     @foreach($pengajuan->items as $index => $item)

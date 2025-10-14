@@ -23,6 +23,13 @@ class ProsesKeuanganController extends Controller
                 ->where('adum_approved_process', 1)
                 ->where('ppk_approved_process', 0)
                 ->get();
+        } elseif($user->role === 'verifikator') {
+            $pengajuans= Pengajuan::with('items','user')
+                ->where('status','processed')
+                ->where('adum_approved_process', 1)
+                ->where('ppk_approved_process', 1)
+                ->where('verifikator_approved_process', 0)
+                ->get();
         } else {
             $pengajuans = collect();
         }
@@ -50,4 +57,5 @@ class ProsesKeuanganController extends Controller
         $pengajuan->save();
         return back()->with('success', 'Pengajuan berhasil diapprove!');
     }
+
 }

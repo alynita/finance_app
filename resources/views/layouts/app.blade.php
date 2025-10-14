@@ -91,10 +91,6 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
         <a href="{{ route('pegawai.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('pegawai.pengajuan.create') }}"><span>Buat Pengajuan</span></a>
         <a href="{{ route('pegawai.daftar-pengajuan') }}"><span>Daftar Pengajuan</span></a>
-        <a href="{{ route('pegawai.penanggung_jawab.index') }}"><span>Penanggung Jawab</span></a>
-
-    @elseif($user->role == 'pj')
-        <a href="{{ route('pj.dashboard') }}"><span>Dashboard</span></a>
 
     @elseif($user->role == 'adum')
         <a href="{{ route('adum.dashboard') }}"><span>Dashboard</span></a>

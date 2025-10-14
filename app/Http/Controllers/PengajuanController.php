@@ -5,15 +5,13 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
 use App\Models\PengajuanItem;
-use App\Models\PenanggungJawab;
 
 class PengajuanController extends Controller
 {
     // Form buat pengajuan
     public function create()
     {
-        $penanggungJawabs = PenanggungJawab::all(); // ambil semua PJ
-        return view('pegawai.pengajuan.create', compact('penanggungJawabs'));
+        return view('pegawai.pengajuan.create');
     }
 
     // Simpan pengajuan baru
@@ -23,7 +21,6 @@ class PengajuanController extends Controller
             'nama_kegiatan' => 'required|string|max:255',
             'waktu_kegiatan' => 'required|date',
             'jenis_pengajuan' => 'required|string',
-            'pj_id' => 'required|exists:penanggung_jawab,id', // pilih PJ
         ]);
 
         $pengajuan = Pengajuan::create([
@@ -31,8 +28,7 @@ class PengajuanController extends Controller
             'nama_kegiatan' => $request->nama_kegiatan,
             'waktu_kegiatan' => $request->waktu_kegiatan,
             'jenis_pengajuan' => $request->jenis_pengajuan,
-            'pj_id' => $request->pj_id, // simpan PJ
-            'status' => 'pending_pj', // mulai dari PJ
+            'status' => 'pending_adum', 
         ]);
 
         // simpan semua item (kode sama seperti sebelumnya)
@@ -90,16 +86,8 @@ class PengajuanController extends Controller
         $user = auth()->user();
 
         switch ($user->role) {
-            case 'pj':
-                $pengajuan->pj_id = $user->id;
-                $pengajuan->pj_approved_at = now();
-                $pengajuan->status = 'pending_adum';
-                break;
 
             case 'adum':
-                if ($pengajuan->status !== 'pending_adum') {
-                    return back()->with('error', 'Pengajuan harus disetujui PJ dulu!');
-                }
                 $pengajuan->adum_id = $user->id;
                 $pengajuan->adum_approved_at = now();
                 $pengajuan->status = 'pending_ppk';
@@ -122,7 +110,7 @@ class PengajuanController extends Controller
 
     public function index()
     {
-        $pengajuans = Pengajuan::with('items', 'pj', 'adum', 'ppk')
+        $pengajuans = Pengajuan::with('items', 'adum', 'ppk')
             ->where('user_id', auth()->id())
             ->get();
 
@@ -131,7 +119,7 @@ class PengajuanController extends Controller
 
     public function show($id)
     {
-        $pengajuan = Pengajuan::with('items', 'pj', 'adum', 'ppk')->findOrFail($id);
+        $pengajuan = Pengajuan::with('items','adum', 'ppk')->findOrFail($id);
         return view('pegawai.pengajuan.show', compact('pengajuan'));
     }
 }

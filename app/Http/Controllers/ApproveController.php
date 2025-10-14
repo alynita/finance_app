@@ -14,11 +14,7 @@ class ApproveController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->role === 'pj') {
-            $pengajuans = Pengajuan::with('items', 'user')
-                ->where('status', 'pending_pj')
-                ->get();
-        } elseif ($user->role === 'adum') {
+        if ($user->role === 'adum') {
             $pengajuans = Pengajuan::with('items', 'user')
                 ->where('status', 'pending_adum')
                 ->get();
@@ -45,12 +41,6 @@ class ApproveController extends Controller
         $user = auth()->user();
 
         switch ($user->role) {
-            case 'pj':
-                $pengajuan->pj_id = $user->id;
-                $pengajuan->pj_approved_at = now();
-                $pengajuan->status = 'pending_adum';
-                break;
-
             case 'adum':
                 if ($pengajuan->status !== 'pending_adum') {
                     return back()->with('error', 'Harus di-approve PJ dulu!');
@@ -84,10 +74,6 @@ class ApproveController extends Controller
         $user = auth()->user();
 
         switch ($user->role) {
-            case 'pj':
-                $pengajuan->status = 'rejected_pj';
-                $pengajuan->pj_id = $user->id;
-                break;
             case 'adum':
                 $pengajuan->status = 'rejected_adum';
                 $pengajuan->adum_id = $user->id;
