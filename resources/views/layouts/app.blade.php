@@ -111,6 +111,9 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
     @elseif($user->role == 'keuangan')
         <a href="{{ route('keuangan.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('keuangan.laporan') }}"><span>Laporan</span></a>
+
+    @elseif($user->role == 'verifikator')
+        <a href="{{ route('verifikator.dashboard') }}"><span>Dashboard</span></a>
     @endif
 
     <a href="{{ route('profile.edit') }}"><span>Profile</span></a>

@@ -114,7 +114,7 @@ class KeuanganController extends Controller
             $pengajuan->kode_akun = $request->kode_akun;
         }
 
-        $pengajuan->status = 'approved';
+        $pengajuan->status = 'processed';
         $pengajuan->save();
 
         return redirect()->route('keuangan.laporan')->with('success', 'Data berhasil disimpan. Menunggu tanda tangan ADUM & PPK.');

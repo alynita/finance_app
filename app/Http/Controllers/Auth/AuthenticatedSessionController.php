@@ -43,6 +43,8 @@ class AuthenticatedSessionController extends Controller
                 return redirect()->intended('/ppk/dashboard');
             } elseif ($user->role === 'keuangan') {
                 return redirect()->intended('/keuangan/dashboard');
+            } elseif ($user->role === 'verifikator') {
+                return redirect()->intended('/verifikator/dashboard');
             } else {
                 return redirect()->intended('/dashboard');
             }

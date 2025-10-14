@@ -81,6 +81,12 @@ Route::middleware(['auth'])->group(function() {
     Route::get('/proses-keuangan/approve/{id}', [ProsesKeuanganController::class, 'approve'])->name('proses.approve');
 });
 
+//Verifikator
+Route::prefix('verifikator')->middleware(['auth'])->group(function(){
+    Route::get('/dashboard', [ProsesKeuanganController::class, 'dashboard'])->name('verifikator.dashboard');
+    Route::get('/proses-keuangan/approve/{id}', [ProsesKeuanganController::class, 'approve'])->name('proses.approve');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

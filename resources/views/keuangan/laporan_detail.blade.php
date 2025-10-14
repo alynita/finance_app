@@ -174,6 +174,22 @@
                 @endif
             </div>
         </div>
+
+        <!-- Verifikator -->
+        <div style="flex:1; text-align:center;">
+            <div>MENGETAHUI</div>
+            <div>Verifikator</div>
+            <div style="margin-top:60px;">
+                @if($pengajuan->verifikator_approved_process)
+                    <div style="opacity:0.6; font-weight:bold;">APPROVED</div>
+                    {{ $pengajuan->verifikator->name ?? 'Nama Verifikator' }}<br>
+                    NIP. {{ $pengajuan->verifikator->nip ?? '-'}}
+                @else
+                    <div>Tanda tangan menunggu approve</div>
+                @endif
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection
