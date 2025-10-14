@@ -11,7 +11,7 @@ class KeuanganController extends Controller
     public function dashboard()
     {
         // tampilkan hanya pengajuan yang sudah disetujui semua pihak
-        $pengajuans = Pengajuan::where('status', 'approved')->get();
+        $pengajuans = Pengajuan::where('status', 'approved_ppk')->get();
         return view('keuangan.dashboard', compact('pengajuans'));
     }
 
@@ -72,7 +72,7 @@ class KeuanganController extends Controller
 
         // ubah status pengajuan jadi selesai
         $pengajuan = Pengajuan::findOrFail($id);
-        $pengajuan->status = 'processed';
+        $pengajuan->status = 'approved';
         $pengajuan->save();
 
         return redirect()->route('keuangan.laporan')->with('success', 'Data honorarium berhasil disimpan!');
@@ -114,7 +114,7 @@ class KeuanganController extends Controller
             $pengajuan->kode_akun = $request->kode_akun;
         }
 
-        $pengajuan->status = 'processed';
+        $pengajuan->status = 'approved';
         $pengajuan->save();
 
         return redirect()->route('keuangan.laporan')->with('success', 'Data berhasil disimpan. Menunggu tanda tangan ADUM & PPK.');

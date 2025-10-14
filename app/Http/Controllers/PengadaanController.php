@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Pengajuan;
+
+class PengadaanController extends Controller
+{
+    // Dashboard pengadaan - hanya yang belum diarsip
+    public function dashboard()
+    {
+        $pengajuans = Pengajuan::with('items', 'user')
+            ->where('is_arsip', false)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('pengadaan.dashboard', compact('pengajuans'));
+    }
+
+    // Simpan arsip
+    public function simpanArsip($id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+        $pengajuan->is_arsip = true;
+        $pengajuan->save();
+
+        return redirect()->route('pengadaan.view-arsip')
+            ->with('success', 'Pengajuan berhasil diarsipkan.');
+    }
+
+    // View Arsip
+    public function viewArsip()
+    {
+        $pengajuans = Pengajuan::with('items', 'user')
+            ->where('is_arsip', true)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('pengadaan.arsip', compact('pengajuans'));
+    }
+}

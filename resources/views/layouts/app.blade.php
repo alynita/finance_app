@@ -92,6 +92,10 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
         <a href="{{ route('pegawai.pengajuan.create') }}"><span>Buat Pengajuan</span></a>
         <a href="{{ route('pegawai.daftar-pengajuan') }}"><span>Daftar Pengajuan</span></a>
 
+    @elseif($user->role == 'penyelenggara_pengadaan')
+        <a href="{{ route('pengadaan.dashboard') }}"><span>Dashboard</span></a>
+        <a href="{{ route('pengadaan.view-arsip') }}"><span>Arsip</span></a>
+
     @elseif($user->role == 'adum')
         <a href="{{ route('adum.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('adum.pengajuan') }}"><span>Pengajuan</span></a>

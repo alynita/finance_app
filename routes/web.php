@@ -5,9 +5,9 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\ApproveController;
-use App\Http\Controllers\PenanggungJawabController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\ProsesKeuanganController;
+use App\Http\Controllers\PengadaanController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -24,6 +24,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/pegawai/pengajuan', [PengajuanController::class, 'store'])->name('pegawai.pengajuan.store');
     Route::get('/pegawai/daftar-pengajuan', [PengajuanController::class, 'index'])->name('pegawai.daftar-pengajuan');
     Route::get('/pegawai/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])->name('pegawai.pengajuan.show');
+});
+
+//**Penyelenggara */
+Route::middleware(['auth'])->prefix('pengadaan')->group(function() {
+    Route::get('/dashboard', [PengadaanController::class, 'dashboard'])->name('pengadaan.dashboard');
+    Route::post('/pengadaan/arsip/{id}', [PengadaanController::class, 'simpanArsip'])->name('pengadaan.arsip');
+    Route::get('/pengadaan/arsip', [PengadaanController::class, 'viewArsip'])->name('pengadaan.view-arsip');
+
 });
 
 //**ADUM/PPK */

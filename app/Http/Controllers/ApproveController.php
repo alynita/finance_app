@@ -42,9 +42,6 @@ class ApproveController extends Controller
 
         switch ($user->role) {
             case 'adum':
-                if ($pengajuan->status !== 'pending_adum') {
-                    return back()->with('error', 'Harus di-approve PJ dulu!');
-                }
                 $pengajuan->adum_id = $user->id;
                 $pengajuan->adum_approved_at = now();
                 $pengajuan->status = 'pending_ppk';
@@ -56,7 +53,7 @@ class ApproveController extends Controller
                 }
                 $pengajuan->ppk_id = $user->id;
                 $pengajuan->ppk_approved_at = now();
-                $pengajuan->status = 'approved';
+                $pengajuan->status = 'approved_ppk';
                 break;
                 
                 return redirect()->route('adum.laporan')->with('success', 'Pengajuan berhasil di-approve!');
