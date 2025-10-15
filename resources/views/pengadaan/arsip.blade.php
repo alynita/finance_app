@@ -69,6 +69,14 @@
                 </tr>
             @endforeach
         </tbody>
+            <a href="{{ route('pengadaan.download', $p->id) }}" 
+            style="display:inline-flex; align-items:center; padding:0.5rem 1rem; background:#e53935; color:white; border-radius:4px; text-decoration:none; font-weight:bold; margin-bottom:1rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" style="width:20px; height:20px; margin-right:0.5rem;" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M5.5 0A1.5 1.5 0 0 0 4 1.5V14.5A1.5 1.5 0 0 0 5.5 16H10.5A1.5 1.5 0 0 0 12 14.5V1.5A1.5 1.5 0 0 0 10.5 0H5.5ZM5 1.5A.5.5 0 0 1 5.5 1h5a.5.5 0 0 1 .5.5V14.5a.5.5 0 0 1-.5.5h-5a.5.5 0 0 1-.5-.5V1.5Z"/>
+                    <path d="M4.5 3.5h7v1h-7v-1zM4.5 5.5h7v1h-7v-1zM4.5 7.5h7v1h-7v-1z"/>
+                </svg>
+                Download PDF
+            </a>
     </table>
     <hr>
 @endforeach

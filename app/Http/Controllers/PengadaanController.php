@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
+use PDF;
 
 class PengadaanController extends Controller
 {
@@ -38,5 +39,18 @@ class PengadaanController extends Controller
             ->get();
 
         return view('pengadaan.arsip', compact('pengajuans'));
+    }
+
+    // Download PDF detail pengajuan
+    public function downloadPDF($id)
+    {
+        $pengajuan = Pengajuan::with(['items', 'user', 'adum', 'ppk'])->findOrFail($id);
+
+        // load view PDF, gunakan landscape agar tabel lebih lebar
+        $pdf = PDF::loadView('pengadaan.pdf_detail', compact('pengajuan'))
+                    ->setPaper('a4', 'landscape');
+
+        // stream ke browser atau download langsung
+        return $pdf->download('Laporan_' . $pengajuan->nama_kegiatan . '.pdf');
     }
 }

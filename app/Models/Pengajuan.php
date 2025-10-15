@@ -50,4 +50,10 @@ class Pengajuan extends Model
     {
         return $this->belongsTo(User::class, 'ppk_id');
     }
+
+    public function verifikator()
+    {
+        return $this->belongsTo(User::class, 'verifikator_id');
+    }
+
 }

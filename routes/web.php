@@ -8,6 +8,7 @@ use App\Http\Controllers\ApproveController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\ProsesKeuanganController;
 use App\Http\Controllers\PengadaanController;
+use App\Http\Controllers\BendaharaController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -31,7 +32,7 @@ Route::middleware(['auth'])->prefix('pengadaan')->group(function() {
     Route::get('/dashboard', [PengadaanController::class, 'dashboard'])->name('pengadaan.dashboard');
     Route::post('/pengadaan/arsip/{id}', [PengadaanController::class, 'simpanArsip'])->name('pengadaan.arsip');
     Route::get('/pengadaan/arsip', [PengadaanController::class, 'viewArsip'])->name('pengadaan.view-arsip');
-
+    Route::get('/pengadaan/{id}/download', [PengadaanController::class, 'downloadPDF'])->name('pengadaan.download');
 });
 
 //**ADUM/PPK */
@@ -68,6 +69,16 @@ Route::prefix('keuangan')->middleware(['auth'])->group(function() {
 
     Route::get('/laporan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
 });
+
+//Bendahara
+Route::prefix('bendahara')->group(function() {
+    Route::get('/dashboard', [BendaharaController::class, 'dashboard'])->name('bendahara.dashboard');
+    Route::get('/laporan/{id}', [BendaharaController::class, 'show'])->name('bendahara.laporan.show');
+    Route::post('/laporan/{id}/arsip', [BendaharaController::class, 'simpanArsip'])->name('bendahara.simpan-arsip');
+    Route::get('/laporan/{id}/download', [BendaharaController::class, 'downloadPDF'])->name('bendahara.download-pdf');
+    Route::get('/arsip', [BendaharaController::class, 'arsip'])->name('bendahara.arsip');
+});
+
 
 // Laporan Keuangan
 Route::middleware(['auth'])->group(function() {
