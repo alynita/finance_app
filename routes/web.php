@@ -9,6 +9,7 @@ use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\ProsesKeuanganController;
 use App\Http\Controllers\PengadaanController;
 use App\Http\Controllers\BendaharaController;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -17,6 +18,16 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+//**Admin */
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    Route::get('/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::put('/admin/users/{id}/update-role', [AdminController::class, 'updateRole'])->name('admin.users.updateRole');
+    Route::post('/admin/users/{id}/reset-password', [AdminController::class, 'resetPassword'])->name('admin.users.resetPassword');
+
+});
+
 
 //**Pegawai */
 Route::middleware('auth')->group(function () {
