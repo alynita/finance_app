@@ -11,7 +11,7 @@ class BendaharaController extends Controller
     // Dashboard pengajuan aktif
     public function dashboard()
     {
-        $laporans = Pengajuan::where('status', 'processed')
+        $laporans = Pengajuan::whereIn('status', ['processed','approved'])
             ->where('arsip', false)
             ->get();
 

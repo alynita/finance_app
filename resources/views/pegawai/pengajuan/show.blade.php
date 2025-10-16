@@ -29,43 +29,42 @@
     <table style="width:100%; border-collapse: collapse;">
         <thead>
             <tr style="background:#f2f2f2;">
-                <th style="border:1px solid #ccc; padding:0.5rem;">Nama Barang</th>
-
-                @if($pengajuan->jenis_pengajuan !== 'honor')
-                    <th style="border:1px solid #ccc; padding:0.5rem;">Volume</th>
-                @endif
 
                 @if($pengajuan->jenis_pengajuan === 'pembelian')
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Nama Barang</th>
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Volume</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">KRO/Kode Akun</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Harga Satuan</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Jumlah Dana</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Ongkos Kirim</th>
                 @elseif($pengajuan->jenis_pengajuan === 'kerusakan')
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Nama Barang</th>
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Volume</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Lokasi</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Jenis Kerusakan</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Harga Satuan</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Jumlah Dana</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Foto</th>
                 @elseif($pengajuan->jenis_pengajuan === 'honor')
-                    <th style="border:1px solid #ccc; padding:0.5rem;">Keterangan</th>
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Tanggal</th>
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Nama</th>
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Jabatan</th>
                 @endif
             </tr>
         </thead>
         <tbody>
             @foreach($pengajuan->items as $item)
                 <tr>
-                    <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->nama_barang ?? '-' }}</td>
-
-                    @if($pengajuan->jenis_pengajuan !== 'honor')
-                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->volume ?? 0)) }}</td>
-                    @endif
-
                     @if($pengajuan->jenis_pengajuan === 'pembelian')
+                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->nama_barang ?? '-' }}</td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->volume ?? 0)) }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->kro ?? '-' }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->harga_satuan ?? 0)) }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->jumlah_dana_pengajuan ?? 0)) }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->ongkos_kirim ?? 0)) }}</td>
                     @elseif($pengajuan->jenis_pengajuan === 'kerusakan')
+                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->nama_barang ?? '-' }}</td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->volume ?? 0)) }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->lokasi ?? '-' }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->jenis_kerusakan ?? '-' }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->harga_satuan ?? 0)) }}</td>
@@ -78,9 +77,9 @@
                             @endif
                         </td>
                     @elseif($pengajuan->jenis_pengajuan === 'honor')
-                        <td style="border:1px solid #ccc; padding:0.5rem;">
-                            Tanggal: {{ $item->tanggal ?? '-' }}, Nama: {{ $item->nama ?? '-' }}, Jabatan: {{ $item->jabatan ?? '-' }}
-                        </td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->tanggal ?? '-' }}</td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->nama ?? '-' }}</td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->jabatan ?? '-' }}</td>
                     @endif
                 </tr>
             @endforeach

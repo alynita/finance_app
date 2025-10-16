@@ -32,7 +32,7 @@
 <p><strong>Kode Akun:</strong> {{ $pengajuan->kode_akun ?? '-' }}</p>
 
 {{-- Tabel Detail Keuangan --}}
-@if($pengajuan->jenis_pengajuan === 'honorarium')
+@if($pengajuan->jenis_pengajuan === 'honor')
 <table>
     <thead>
         <tr>
@@ -53,14 +53,13 @@
         @foreach($pengajuan->honorariums as $index => $h)
         <tr>
             <td>{{ $index + 1 }}</td>
-            <td>{{ $h->invoice ?? '-' }}</td>
             <td>{{ $h->nama }}</td>
             <td>{{ $h->jabatan }}</td>
-            <td>Honorarium</td>
+            <td>{{ $h->uraian }}</td>
             <td>{{ number_format($h->jumlah_honor,0,',','.') }}</td>
             <td>{{ $h->bulan }}</td>
             <td>{{ number_format($h->total_honor,0,',','.') }}</td>
-            <td>{{ number_format($h->pph21,0,',','.') }}</td>
+            <td>{{ number_format($h->pph_21,0,',','.') }}</td>
             <td>{{ number_format($h->jumlah,0,',','.') }}</td>
             <td>{{ $h->no_rekening }}</td>
             <td>{{ $h->bank }}</td>

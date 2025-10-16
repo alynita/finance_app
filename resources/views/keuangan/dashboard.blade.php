@@ -26,7 +26,17 @@
                 <td>{{ $pengajuan->user->name }}</td>
                 <td>{{ ucfirst($pengajuan->status) }}</td>
                 <td>
-                    <a href="{{ route('keuangan.proses', $pengajuan->id) }}" style="padding:5px 10px; background:blue; color:white; border-radius:3px;">Proses</a>
+                    @if($pengajuan->jenis_pengajuan === 'honor')
+                        <a href="{{ route('keuangan.proses_honorarium', $pengajuan->id) }}"
+                        style="padding:5px 10px; background:blue; color:white; border-radius:3px;">
+                        Proses
+                        </a>
+                    @else
+                        <a href="{{ route('keuangan.proses', $pengajuan->id) }}"
+                        style="padding:5px 10px; background:blue; color:white; border-radius:3px;">
+                        Proses
+                        </a>
+                    @endif
                 </td>
             </tr>
         @empty

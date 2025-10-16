@@ -99,13 +99,11 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
     @elseif($user->role == 'adum')
         <a href="{{ route('adum.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('adum.pengajuan') }}"><span>Pengajuan</span></a>
-        <a href="{{ route('adum.laporan') }}"><span>Laporan</span></a>
         <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
 
     @elseif($user->role == 'ppk')
         <a href="{{ route('ppk.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('ppk.pengajuan') }}"><span>Pengajuan</span></a>
-        <a href="{{ route('ppk.laporan') }}"><span>Laporan</span></a>
         <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
 
     @elseif($user->role == 'keuangan')

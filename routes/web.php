@@ -75,9 +75,9 @@ Route::prefix('keuangan')->middleware(['auth'])->group(function() {
     Route::get('/dashboard', [KeuanganController::class, 'dashboard'])->name('keuangan.dashboard');
     Route::get('/proses/{id}', [KeuanganController::class, 'proses'])->name('keuangan.proses');
     Route::post('/proses/{id}', [KeuanganController::class, 'storeProses'])->name('keuangan.storeProses');
+    Route::get('/proses-honorarium/{id}', [KeuanganController::class, 'prosesHonorarium'])->name('keuangan.proses_honorarium');
     Route::post('/simpan-honorarium/{id}', [KeuanganController::class, 'simpanHonorarium'])->name('keuangan.simpanHonorarium');
     Route::post('/keuangan/approve/{id}', [KeuanganController::class, 'approveProcess'])->name('keuangan.approve.process');
-
     Route::get('/laporan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
 });
 

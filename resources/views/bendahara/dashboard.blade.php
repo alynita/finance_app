@@ -15,7 +15,8 @@
                 <th>Waktu Kegiatan</th>
                 <th>Jenis Pengajuan</th>
                 <th>Status</th>
-                <th>Aksi</th>
+                <th>Aksi Detail</th>
+                <th>Aksi Arsip</th>
             </tr>
         </thead>
         <tbody>
@@ -26,13 +27,33 @@
                     <td>{{ $laporan->waktu_kegiatan }}</td>
                     <td>{{ ucfirst($laporan->jenis_pengajuan) }}</td>
                     <td style="color:green; font-weight:bold;">{{ ucfirst($laporan->status) }}</td>
+                    <!-- Kolom Aksi Detail -->
                     <td>
-                        <a href="{{ route('bendahara.laporan.show', $laporan->id) }}">Lihat Detail</a>
+                        <a href="{{ route('bendahara.laporan.show', $laporan->id) }}" 
+                            style="padding:5px 10px; background-color:#28a745; color:white; border-radius:3px; text-decoration:none;">
+                            Lihat Detail
+                        </a>
+                    </td>
+                    <!-- Kolom Aksi Arsip -->
+                    <td>
+                        @if($laporan->adum_approved_process && $laporan->ppk_approved_process && $laporan->verifikator_approved_process && !$laporan->arsip)
+                            <form action="{{ route('bendahara.simpan-arsip', $laporan->id) }}" method="POST">
+                                @csrf
+                                <button type="submit" onclick="return confirm('Yakin ingin mengarsipkan pengajuan ini?')" 
+                                        style="padding:5px 10px; background-color:#007bff; color:white; border:none; border-radius:3px;">
+                                    Simpan Arsip
+                                </button>
+                            </form>
+                        @elseif($laporan->arsip)
+                            <span style="color:green; font-weight:bold;">Sudah diarsipkan</span>
+                        @else
+                            <span style="color:red;">Menunggu semua approval</span>
+                        @endif
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" style="text-align:center;">Belum ada laporan yang diproses.</td>
+                    <td colspan="8" style="text-align:center;">Belum ada laporan yang diproses.</td>
                 </tr>
             @endforelse
         </tbody>

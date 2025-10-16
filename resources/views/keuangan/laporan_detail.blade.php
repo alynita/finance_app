@@ -37,7 +37,7 @@
         </tr>
     </table>
 
-    @if($pengajuan->jenis_pengajuan === 'honorarium')
+    @if($pengajuan->jenis_pengajuan === 'honor')
         {{-- Tabel Honorarium --}}
         <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:collapse; margin-top:1rem;">
             <thead>
@@ -63,7 +63,7 @@
 
                 @foreach($pengajuan->honorariums as $index => $h)
                     @php
-                        $pajak = $h->pph21 ?? 0;
+                        $pajak = $h->pph_21 ?? 0;
                         $akhir = $h->jumlah ?? 0;
                         $totalPajak += $pajak;
                         $totalDiterima += $akhir;
@@ -72,11 +72,11 @@
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $h->nama }}</td>
                         <td>{{ $h->jabatan }}</td>
-                        <td>Honorarium</td>
+                        <td>{{ $h->uraian }}</td>
                         <td>{{ number_format($h->jumlah_honor, 0, ',', '.') }}</td>
                         <td>{{ $h->bulan }}</td>
                         <td>{{ number_format($h->total_honor, 0, ',', '.') }}</td>
-                        <td>{{ number_format($h->pph21, 0, ',', '.') }}</td>
+                        <td>{{ number_format($h->pph_21, 0, ',', '.') }}</td>
                         <td>{{ number_format($h->jumlah, 0, ',', '.') }}</td>
                         <td>{{ $h->no_rekening }}</td>
                         <td>{{ $h->bank }}</td>
