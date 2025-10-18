@@ -121,16 +121,18 @@
     </div>
 
     <button type="button" id="btnSimpan" style="padding:0.5rem 1rem; background-color: #28a745; color: white; border: none; border-radius:5px; cursor:pointer;">
-    Simpan
+        Simpan
     </button>
 
     <script>
     document.getElementById('btnSimpan').addEventListener('click', function() {
-        if(confirm("Apakah kamu yakin ingin menyimpan data ini?")) {
-            this.closest('form').submit();
+        if (confirm("Apakah kamu yakin ingin menyimpan data ini?")) {
+            updateTotals(); // 🔥 pastikan semua nilai pajak & dibayarkan terhitung
+            this.closest('form').submit(); // lalu kirim form
         }
     });
-    </script>
+</script>
+
 </form>
 
 <script>

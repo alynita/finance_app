@@ -26,23 +26,26 @@
     <thead>
         <tr>
             <th>No</th>
-            <th>Nama Barang / Uraian</th>
             @if($pengajuan->jenis_pengajuan !== 'honor')
                 <th>Volume</th>
             @endif
             @if($pengajuan->jenis_pengajuan === 'pembelian')
+                <th>Nama Barang </th>
                 <th>KRO/Kode Akun</th>
                 <th>Harga Satuan</th>
                 <th>Jumlah Dana</th>
                 <th>Ongkos Kirim</th>
             @elseif($pengajuan->jenis_pengajuan === 'kerusakan')
+                <th>Nama Barang </th>
                 <th>Lokasi</th>
                 <th>Jenis Kerusakan</th>
                 <th>Harga Satuan</th>
                 <th>Jumlah Dana</th>
                 <th>Foto</th>
             @elseif($pengajuan->jenis_pengajuan === 'honor')
-                <th>Keterangan</th>
+                <th>Tanggal</th>
+                <th>Nama</th>
+                <th>Jabatan</th>
             @endif
         </tr>
     </thead>
@@ -50,23 +53,27 @@
         @foreach($pengajuan->items as $index => $item)
         <tr>
             <td>{{ $index + 1 }}</td>
-            <td>{{ $item->nama_barang ?? $item->nama ?? '-' }}</td>
             @if($pengajuan->jenis_pengajuan !== 'honor')
-                <td>{{ $item->volume ?? '-' }}</td>
             @endif
             @if($pengajuan->jenis_pengajuan === 'pembelian')
+                <td>{{ $item->nama_barang ?? $item->nama ?? '-' }}</td>
                 <td>{{ $item->kro ?? '-' }}</td>
                 <td>{{ number_format($item->harga_satuan ?? 0) }}</td>
+                <td>{{ $item->volume ?? '-' }}</td>
                 <td>{{ number_format($item->jumlah_dana_pengajuan ?? 0) }}</td>
                 <td>{{ number_format($item->ongkos_kirim ?? 0) }}</td>
             @elseif($pengajuan->jenis_pengajuan === 'kerusakan')
+                <td>{{ $item->nama_barang ?? $item->nama ?? '-' }}</td>
                 <td>{{ $item->lokasi ?? '-' }}</td>
                 <td>{{ $item->jenis_kerusakan ?? '-' }}</td>
                 <td>{{ number_format($item->harga_satuan ?? 0) }}</td>
+                <td>{{ $item->volume ?? '-' }}</td>
                 <td>{{ number_format($item->jumlah_dana_pengajuan ?? 0) }}</td>
                 <td>@if($item->foto)<a href="{{ asset('storage/' . $item->foto) }}">Lihat</a>@else - @endif</td>
             @elseif($pengajuan->jenis_pengajuan === 'honor')
-                <td>Tanggal: {{ $item->tanggal ?? '-' }}, Nama: {{ $item->nama ?? '-' }}, Jabatan: {{ $item->jabatan ?? '-' }}</td>
+                <td>{{ $item->tanggal ?? '-' }} </td>
+                <td>{{ $item->nama ?? '-' }} </td>
+                <td>{{ $item->jabatan ?? '-' }}</td>
             @endif
         </tr>
         @endforeach
@@ -81,16 +88,22 @@
             <div>MENGETAHUI</div>
             <div>Subbagian Administrasi Umum</div>
             <div style="margin-top:60px;">
+                @if($pengajuan->adum_approved_process)
+                    <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
+                @endif
                 {{ $pengajuan->adum->name ?? 'Nama ADUM' }}<br>
                 NIP. {{ $pengajuan->adum->nip ?? '-' }}
             </div>
         </td>
 
-        <!-- PPK tengah, agak ke bawah -->
+        <!-- PPK tengah -->
         <td style="width:33%; text-align:center; vertical-align:bottom; border:none;">
             <div>MENYETUJUI</div>
             <div>PPK</div>
             <div style="margin-top:60px;">
+                @if($pengajuan->ppk_approved_process)
+                    <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
+                @endif
                 {{ $pengajuan->ppk->name ?? 'Nama PPK' }}<br>
                 NIP. {{ $pengajuan->ppk->nip ?? '-' }}
             </div>
@@ -99,10 +112,13 @@
         <!-- Verifikator kanan -->
         <td style="width:33%; text-align:center; vertical-align:top; border:none;">
             <div>MENGETAHUI</div>
-            <div>Penanggun Jawab</div>
+            <div>Verifikator</div>
             <div style="margin-top:60px;">
-                {{ $pengajuan->user->name ?? 'Nama Penanggung Jawab' }}<br>
-                NIP. {{ $pengajuan->user->nip ?? '-' }}
+                @if($pengajuan->verifikator_approved_process)
+                    <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
+                @endif
+                {{ $pengajuan->verifikator->name ?? 'Nama Verifikator' }}<br>
+                NIP. {{ $pengajuan->verifikator->nip ?? '-' }}
             </div>
         </td>
     </tr>

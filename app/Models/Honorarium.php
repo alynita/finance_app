@@ -15,17 +15,19 @@ class Honorarium extends Model
         'pengajuan_id',
         'nama',
         'jabatan',
+        'uraian',
         'jumlah_honor',
         'bulan',
         'total_honor',
-        'pph21',
+        'pph_21',
         'jumlah',
         'no_rekening',
-        'bank'
+        'bank',
+        'tanggal',
     ];
 
     public function pengajuan()
     {
-        return $this->belongsTo(Pengajuan::class, 'pengajuan_id');
+        return $this->belongsTo(Pengajuan::class, 'pengajuan_id', 'id');
     }
 }

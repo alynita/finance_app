@@ -36,7 +36,7 @@
 <table>
     <thead>
         <tr>
-            <th>No</th>
+            <th>Tanggal</th>
             <th>Nama</th>
             <th>Jabatan</th>
             <th>Uraian</th>
@@ -52,7 +52,7 @@
     <tbody>
         @foreach($pengajuan->honorariums as $index => $h)
         <tr>
-            <td>{{ $index + 1 }}</td>
+            <td>{{ $h->tanggal }}</td>
             <td>{{ $h->nama }}</td>
             <td>{{ $h->jabatan }}</td>
             <td>{{ $h->uraian }}</td>
@@ -106,7 +106,6 @@
 </table>
 @endif
 
-{{-- Tanda tangan --}}
 <table style="width:100%; margin-top:80px; border-collapse:collapse; border:none;">
     <tr>
         <!-- ADUM kiri -->
@@ -114,16 +113,22 @@
             <div>MENGETAHUI</div>
             <div>Subbagian Administrasi Umum</div>
             <div style="margin-top:60px;">
+                @if($pengajuan->adum_approved_process)
+                    <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
+                @endif
                 {{ $pengajuan->adum->name ?? 'Nama ADUM' }}<br>
                 NIP. {{ $pengajuan->adum->nip ?? '-' }}
             </div>
         </td>
 
-        <!-- PPK tengah, agak ke bawah -->
+        <!-- PPK tengah -->
         <td style="width:33%; text-align:center; vertical-align:bottom; border:none;">
             <div>MENYETUJUI</div>
             <div>PPK</div>
             <div style="margin-top:60px;">
+                @if($pengajuan->ppk_approved_process)
+                    <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
+                @endif
                 {{ $pengajuan->ppk->name ?? 'Nama PPK' }}<br>
                 NIP. {{ $pengajuan->ppk->nip ?? '-' }}
             </div>
@@ -134,14 +139,15 @@
             <div>MENGETAHUI</div>
             <div>Verifikator</div>
             <div style="margin-top:60px;">
+                @if($pengajuan->verifikator_approved_process)
+                    <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
+                @endif
                 {{ $pengajuan->verifikator->name ?? 'Nama Verifikator' }}<br>
                 NIP. {{ $pengajuan->verifikator->nip ?? '-' }}
             </div>
         </td>
     </tr>
 </table>
-
-
 
 </body>
 </html>

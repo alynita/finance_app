@@ -37,12 +37,17 @@
         </tr>
     </table>
 
+    @php
+        $totalPajak = 0;
+        $totalDiterima = 0;
+    @endphp
+
     @if($pengajuan->jenis_pengajuan === 'honor')
         {{-- Tabel Honorarium --}}
         <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:collapse; margin-top:1rem;">
             <thead>
                 <tr>
-                    <th>No</th>
+                    <th>Tanggal</th>
                     <th>Nama</th>
                     <th>Jabatan</th>
                     <th>Uraian</th>
@@ -56,11 +61,6 @@
                 </tr>
             </thead>
             <tbody>
-                @php
-                    $totalPajak = 0;
-                    $totalDiterima = 0;
-                @endphp
-
                 @foreach($pengajuan->honorariums as $index => $h)
                     @php
                         $pajak = $h->pph_21 ?? 0;
@@ -69,7 +69,7 @@
                         $totalDiterima += $akhir;
                     @endphp
                     <tr>
-                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $h->tanggal }}</td>
                         <td>{{ $h->nama }}</td>
                         <td>{{ $h->jabatan }}</td>
                         <td>{{ $h->uraian }}</td>
@@ -104,18 +104,17 @@
                 </tr>
             </thead>
             <tbody>
-                @php
-                    $totalPajak = 0;
-                    $totalDiterima = 0;
-                @endphp
-
                 @foreach($pengajuan->items as $index => $item)
                     @php
+                        // skip baris kosong
+                        if (!$item->jumlah_dana_pengajuan) continue;
+
                         $pph21 = $item->pph21 ?? 0;
                         $pph22 = $item->pph22 ?? 0;
                         $pph23 = $item->pph23 ?? 0;
-                        $ppn = $item->ppn ?? 0;
-                        $dibayarkan = $item->dibayarkan ?? 0;
+                        $ppn   = $item->ppn ?? 0;
+                        $dibayarkan = $item->dibayarkan ?? ($item->jumlah_dana_pengajuan - ($pph21+$pph22+$pph23+$ppn));
+
                         $totalPajak += ($pph21 + $pph22 + $pph23 + $ppn);
                         $totalDiterima += $dibayarkan;
                     @endphp
@@ -137,7 +136,7 @@
             </tbody>
         </table>
 
-        {{-- ✅ Total Pajak & Diterima --}}
+        {{-- Total Pajak & Diterima --}}
         <div style="margin-top:1rem; padding:10px; border:1px solid #000; border-radius:5px; width:300px;">
             <p><strong>Total Pajak:</strong> Rp {{ number_format($totalPajak, 0, ',', '.') }}</p>
             <p><strong>Total Diterima:</strong> Rp {{ number_format($totalDiterima, 0, ',', '.') }}</p>
@@ -146,8 +145,7 @@
 
     {{-- Tanda tangan --}}
     <div style="display:flex; justify-content:space-between; margin-top:40px;">
-
-        <!-- ADUM (kiri) -->
+        {{-- ADUM --}}
         <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center;">
             <div>MENGETAHUI</div>
             <div>Subbagian Administrasi Umum</div>
@@ -162,7 +160,7 @@
             </div>
         </div>
 
-        <!-- PPK (kanan) -->
+        {{-- PPK --}}
         <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center;">
             <div>MENYETUJUI</div>
             <div>PPK</div>
@@ -177,7 +175,7 @@
             </div>
         </div>
 
-        <!-- Verifikator -->
+        {{-- Verifikator --}}
         <div style="flex:1; text-align:center;">
             <div>MENGETAHUI</div>
             <div>Verifikator</div>
@@ -191,7 +189,6 @@
                 @endif
             </div>
         </div>
-
     </div>
 </div>
 @endsection

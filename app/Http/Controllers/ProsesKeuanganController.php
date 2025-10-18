@@ -42,27 +42,36 @@ class ProsesKeuanganController extends Controller
         $pengajuan = Pengajuan::findOrFail($id);
         $user = auth()->user();
 
-        if ($user->role === 'adum') {
-            $pengajuan->adum_approved_process = 1;
+        switch ($user->role) {
+            case 'adum':
+                $pengajuan->adum_approved_process = 1;
+                $pengajuan->adum_id = $user->id; // simpan ID ADUM
+                break;
 
-        } elseif ($user->role === 'ppk') {
-            if ($pengajuan->adum_approved_process != 1) {
-                return back()->with('error', 'Harus diapprove ADUM dulu!');
-            }
-            $pengajuan->ppk_approved_process = 1;
+            case 'ppk':
+                if ($pengajuan->adum_approved_process != 1) {
+                    return back()->with('error', 'Harus diapprove ADUM dulu!');
+                }
+                $pengajuan->ppk_approved_process = 1;
+                $pengajuan->ppk_id = $user->id; // simpan ID PPK
+                break;
 
-        } elseif ($user->role === 'verifikator') {
-            if ($pengajuan->adum_approved_process != 1 || $pengajuan->ppk_approved_process != 1) {
-                return back()->with('error', 'Harus disetujui ADUM dan PPK dulu!');
-            }
-            $pengajuan->verifikator_approved_process = 1;
-            $pengajuan->status = 'approved'; // status akhir setelah verifikator approve
-        } else {
-            return back()->with('error', 'Role tidak memiliki hak approve.');
+            case 'verifikator':
+                if ($pengajuan->adum_approved_process != 1 || $pengajuan->ppk_approved_process != 1) {
+                    return back()->with('error', 'Harus disetujui ADUM dan PPK dulu!');
+                }
+                $pengajuan->verifikator_approved_process = 1;
+                $pengajuan->verifikator_id = $user->id; // simpan ID verifikator
+                $pengajuan->status = 'approved'; // status akhir setelah verifikator approve
+                break;
+
+            default:
+                return back()->with('error', 'Role tidak memiliki hak approve.');
         }
 
         $pengajuan->save();
 
         return back()->with('success', 'Pengajuan berhasil diapprove!');
     }
+
 }

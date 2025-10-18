@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
+use App\Models\PengajuanItem;
 use App\Models\Honorarium;
 
 class KeuanganController extends Controller
@@ -45,93 +46,115 @@ class KeuanganController extends Controller
     public function simpanHonorarium(Request $request, $id)
     {
         $request->validate([
-            'uraian' => 'required|string',
-            'jumlah_honor' => 'required|numeric',
-            'bulan' => 'required|numeric',
-            'no_rekening' => 'required|string',
-            'bank' => 'required|string',
-        ]);
-
-        $pengajuan = Pengajuan::findOrFail($id);
-
-        // Ambil nama dan jabatan dari pengajuan
-        $nama = $pengajuan->nama_pengaju ?? 'Tidak Diketahui';
-        $jabatan = $pengajuan->jabatan_pengaju ?? 'Tidak Diketahui';
-
-        // Hitung otomatis
-        $total_honor = $request->jumlah_honor * $request->bulan;
-        $pph21 = $total_honor * 0.15;
-        $jumlah = $total_honor - $pph21;
-
-        // Simpan ke tabel honorarium
-        Honorarium::create([
-            'pengajuan_id' => $id,
-            'nama' => $nama,
-            'jabatan' => $jabatan,
-            'uraian' => $request->uraian,
-            'jumlah_honor' => $request->jumlah_honor,
-            'bulan' => $request->bulan,
-            'total_honor' => $total_honor,
-            'pph21' => $pph_21,
-            'jumlah' => $jumlah,
-            'no_rekening' => $request->no_rekening,
-            'bank' => $request->bank,
-            'tanggal' => now(),
-        ]);
-
-        // Ubah status pengajuan jadi processed
-        $pengajuan->status = 'processed';
-        $pengajuan->save();
-
-        return redirect()->route('keuangan.laporan')
-            ->with('success', 'Data honorarium berhasil disimpan ke laporan!');
-    }
-
-    public function storeProses(Request $request, $id)
-    {
-        $pengajuan = Pengajuan::with('items')->findOrFail($id);
-
-        // Validasi data yang masuk
-        $request->validate([
-            'items' => 'required|array',
             'items.*.nama' => 'required|string',
             'items.*.jabatan' => 'required|string',
             'items.*.uraian' => 'required|string',
             'items.*.jumlah_honor' => 'required|numeric',
             'items.*.bulan' => 'required|numeric',
-            'items.*.pph_21' => 'required|numeric',
-            'items.*.jumlah' => 'required|numeric',
             'items.*.no_rekening' => 'required|string',
             'items.*.bank' => 'required|string',
         ]);
 
-        // Loop semua item dan simpan ke tabel honorarium
+        $pengajuan = Pengajuan::findOrFail($id);
+
+         // Simpan kode akun di pengajuan
+        $pengajuan->kode_akun = $request->kode_akun;
+        $pengajuan->save();
+
+        // Hapus honorarium lama (opsional)
+        $pengajuan->honorariums()->delete();
+
         foreach ($request->items as $item) {
-            Honorarium::create([
-                'pengajuan_id' => $pengajuan->id,
+            $total_honor = $item['jumlah_honor'] * $item['bulan'];
+            $pph21 = $total_honor * 0.15;
+            $jumlah = $total_honor - $pph21;
+
+            $pengajuan->honorariums()->create([
+                'tanggal' => $item['tanggal'] ?? $pengajuan->tanggal,
                 'nama' => $item['nama'],
                 'jabatan' => $item['jabatan'],
                 'uraian' => $item['uraian'],
                 'jumlah_honor' => $item['jumlah_honor'],
                 'bulan' => $item['bulan'],
-                'pph_21' => $item['pph_21'],
-                'jumlah' => $item['jumlah'],
+                'total_honor' => $total_honor,
+                'pph_21' => $pph21,
+                'jumlah' => $jumlah,
                 'no_rekening' => $item['no_rekening'],
                 'bank' => $item['bank'],
             ]);
         }
 
-        // Simpan kode akun kalau diisi
-        if ($request->filled('no_akun')) {
-            $pengajuan->kode_akun = $request->no_akun;
-        }
-
-        // Update status pengajuan
         $pengajuan->status = 'processed';
         $pengajuan->save();
 
         return redirect()->route('keuangan.laporan')
-            ->with('success', 'Data berhasil disimpan dan menunggu tanda tangan ADUM & PPK.');
+                        ->with('success', 'Honorarium berhasil disimpan!');
+    }
+
+    public function storeProses(Request $request, $id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+
+        $convertToDecimal = function($value) {
+            if (!$value) return 0;
+            $value = str_replace('.', '', $value);
+            $value = str_replace(',', '.', $value);
+            return floatval($value);
+        };
+
+        // 🔹 Hapus semua item lama sebelum simpan ulang
+        PengajuanItem::where('pengajuan_id', $pengajuan->id)->delete();
+
+        $uraianList = $request->uraian ?? [];
+
+        foreach ($uraianList as $index => $uraian) {
+            $jumlah = $request->jumlah_pengajuan[$index] ?? null;
+
+            if (
+                (empty($request->detail_akun[$index]) && trim($uraian) === '') ||
+                empty($jumlah)
+            ) continue;
+
+            // 🔹 Ambil nilai hasil pajak (bukan persentase)
+            $pph21 = $convertToDecimal($request->hasil_pph21[$index] ?? 0);
+            $pph22 = $convertToDecimal($request->hasil_pph22[$index] ?? 0);
+            $pph23 = $convertToDecimal($request->hasil_pph23[$index] ?? 0);
+            $ppn   = $convertToDecimal($request->hasil_ppn[$index] ?? 0);
+
+            $jumlahDecimal = $convertToDecimal($jumlah);
+            $totalPajak = $pph21 + $pph22 + $pph23 + $ppn;
+
+            // 🔹 Hitung dibayarkan otomatis jika kosong
+            $dibayarkan = $convertToDecimal($request->dibayarkan[$index] ?? null);
+            if ($dibayarkan == 0) {
+                $dibayarkan = $jumlahDecimal - $totalPajak;
+            }
+
+            PengajuanItem::create([
+                'pengajuan_id' => $pengajuan->id,
+                'invoice' => $request->invoice[$index] ?? null,
+                'nama_barang' => $request->detail_akun[$index] ?? null,
+                'uraian' => $uraian,
+                'jumlah_dana_pengajuan' => $jumlahDecimal,
+                'pph21' => $pph21,
+                'pph22' => $pph22,
+                'pph23' => $pph23,
+                'ppn' => $ppn,
+                'dibayarkan' => $dibayarkan,
+                'no_rekening' => $request->no_rekening[$index] ?? null,
+                'bank' => $request->bank[$index] ?? null,
+            ]);
+        }
+
+        if ($request->filled('kode_akun')) {
+            $pengajuan->kode_akun = $request->kode_akun;
+        }
+
+        $pengajuan->status = 'processed';
+        $pengajuan->save();
+
+        return redirect()->route('keuangan.laporan')
+            ->with('success', 'Data pengajuan berhasil disimpan ke laporan tanpa duplikasi!');
     }
 
     public function prosesHonorarium($id)
@@ -150,7 +173,7 @@ class KeuanganController extends Controller
 
     public function lihatDetail($id)
     {
-        $pengajuan = Pengajuan::with('items', 'honorariums')->findOrFail($id);
+        $pengajuan = Pengajuan::with('items', 'honorariums', 'adum', 'ppk', 'verifikator')->findOrFail($id);
 
         return view('keuangan.laporan_detail', compact('pengajuan'));
     }
@@ -165,6 +188,10 @@ class KeuanganController extends Controller
 
         if(auth()->user()->role == 'ppk') {
             $pengajuan->ppk_approved_process = true;
+        }
+
+        if(auth()->user()->role == 'verifikator') {
+            $pengajuan->verifikator_approved_process = true;
         }
 
         $pengajuan->save();

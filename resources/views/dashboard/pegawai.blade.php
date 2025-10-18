@@ -54,7 +54,7 @@
     });
     </script>
 
-    <a href="{{ route('pegawai.daftar-pengajuan') }}" style="display:inline-block; margin:1rem 0; padding:0.5rem 1rem; background:#3490dc; color:white; text-decoration:none; border-radius:4px;">Buat Pengajuan</a>
+    <a href="{{ route('pegawai.pengajuan.create') }}" style="display:inline-block; margin:1rem 0; padding:0.5rem 1rem; background:#3490dc; color:white; text-decoration:none; border-radius:4px;">Buat Pengajuan</a>
 
     <h3>Ringkasan Pengajuan</h3>
     <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width:100%;">

@@ -33,7 +33,7 @@
             {{ ucfirst($p->status) }}
         </span>
     </h3>
-    <p>Pengaju: {{ $p->user->name }} | Tanggal: {{ $p->created_at->format('d-m-Y') }}</p>
+    <p>Pengaju: {{ $p->user->name ?? '-' }} | Tanggal: {{ $p->created_at ? $p->created_at->format('d-m-Y') : '-' }}</p>
 
     <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:1rem;">
         <thead>
@@ -85,7 +85,7 @@
                             @endif
                         </td>
                     @elseif($p->jenis_pengajuan === 'honor')
-                        <td>{{ $item->tanggal ?? '-'}}<td>
+                        <td>{{ $item->tanggal ?? '-' }}</td>
                         <td>{{ $item->nama ?? '-' }}</td>
                         <td>{{ $item->jabatan ?? '-' }}</td>
                     @endif
@@ -94,21 +94,21 @@
         </tbody>
     </table>
 
-    @if($p->status === 'approved')
-    <form method="POST" action="{{ route('pengadaan.arsip', $p->id) }}">
-        @csrf
-        <button type="submit" style="
-            background-color: #4CAF50; 
-            color: white; 
-            padding: 0.5rem 1rem; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: pointer;
-            transition: background 0.2s;
-        " onmouseover="this.style.backgroundColor='#45a049'" onmouseout="this.style.backgroundColor='#4CAF50'">
-            Simpan Arsip
-        </button>
-    </form>
+    @if($p->status === 'approved_ppk')
+        <form method="POST" action="{{ route('pengadaan.arsip', $p->id) }}">
+            @csrf
+            <button type="submit" style="
+                background-color: #4CAF50; 
+                color: white; 
+                padding: 0.5rem 1rem; 
+                border: none; 
+                border-radius: 4px; 
+                cursor: pointer;
+                transition: background 0.2s;
+            " onmouseover="this.style.backgroundColor='#45a049'" onmouseout="this.style.backgroundColor='#4CAF50'">
+                Simpan Arsip
+            </button>
+        </form>
     @else
         <button style="
             background-color: #ccc; 
@@ -122,7 +122,6 @@
         </button>
     @endif
 
-    </form>
     <hr>
 @endforeach
 
