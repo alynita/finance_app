@@ -19,6 +19,13 @@ class Pengajuan extends Model
         'status',
         'adum_id',
         'ppk_id',
+        'mengetahui_id',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'mengetahui_approved_at' => 'datetime'
     ];
 
     // relasi ke item pengajuan
@@ -45,10 +52,21 @@ class Pengajuan extends Model
         return $this->belongsTo(User::class, 'adum_id');
     }
 
+    //relasi ke timker1-6
+    public function mengetahui()
+    {
+        return $this->belongsTo(User::class, 'mengetahui_id');
+    }
+
     // relasi ke PPK (user yang approve sebagai PPK)
     public function ppk()
     {
         return $this->belongsTo(User::class, 'ppk_id');
+    }
+
+    public function ppkGroups()
+    {
+        return $this->hasMany(PpkGroup::class);
     }
 
     public function verifikator()

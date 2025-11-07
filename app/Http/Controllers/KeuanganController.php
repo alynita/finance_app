@@ -3,202 +3,146 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Pengajuan;
+use App\Models\PpkGroup;
 use App\Models\PengajuanItem;
-use App\Models\Honorarium;
+use Illuminate\Support\Facades\DB;
+use \App\Models\Honor;
 
 class KeuanganController extends Controller
 {
+    // Dashboard grup yang sudah submit keuangan
     public function dashboard()
     {
-        // tampilkan hanya pengajuan yang sudah disetujui semua pihak
-        $pengajuans = Pengajuan::where('status', 'approved_ppk')->get();
-        return view('keuangan.dashboard', compact('pengajuans'));
+        $groups = PpkGroup::where('status', 'submitted_keuangan')
+            ->with('pengajuan.user', 'items')
+            ->get();
+
+        return view('keuangan.dashboard', compact('groups'));
     }
 
-    public function proses($id)
+    // Detail per grup untuk proses pembayaran
+    public function showGroup($groupId)
     {
-        $pengajuan = Pengajuan::with('items')->findOrFail($id);
-
-        // hitung total pajak & diterima
-        $totalPajak = 0;
-        $totalDiterima = 0;
-        foreach ($pengajuan->items as $item) {
-            $pph21 = $item->pph21 ?? 0;
-            $pph22 = $item->pph22 ?? 0;
-            $pph23 = $item->pph23 ?? 0;
-            $ppn   = $item->ppn ?? 0;
-
-            $pajak = $pph21 + $pph22 + $pph23 + $ppn;
-            $totalPajak += $pajak;
-
-            $dibayarkan = $item->jumlah_dana_pengajuan - $pajak;
-            $totalDiterima += $dibayarkan;
-        }
-
-        if ($pengajuan->jenis_pengajuan === 'honor') {
-            return view('keuangan.proses_honorarium', compact('pengajuan'));
-        } else {
-            return view('keuangan.proses', compact('pengajuan', 'totalPajak', 'totalDiterima'));
-        }
+        $group = PpkGroup::with('pengajuan.user', 'items')->findOrFail($groupId);
+        return view('keuangan.showGroup', compact('group'));
     }
 
-    public function simpanHonorarium(Request $request, $id)
+    // Simpan proses pembayaran
+    public function storeProses(Request $request, $groupId)
     {
-        $request->validate([
-            'items.*.nama' => 'required|string',
-            'items.*.jabatan' => 'required|string',
-            'items.*.uraian' => 'required|string',
-            'items.*.jumlah_honor' => 'required|numeric',
-            'items.*.bulan' => 'required|numeric',
-            'items.*.no_rekening' => 'required|string',
-            'items.*.bank' => 'required|string',
+        $group = PpkGroup::with('items')->findOrFail($groupId);
+
+        foreach($request->items ?? [] as $itemId => $data){
+            $item = $group->items->where('id', $itemId)->first();
+            if(!$item) continue;
+
+            $item->invoice = $data['invoice'] ?? $item->invoice;
+            $item->detail_akun = $data['detail_akun'] ?? $item->nama_barang;
+            $item->uraian = $data['uraian'] ?? $item->uraian;
+            $item->jumlah_dana_pengajuan = str_replace('.', '', $data['jumlah_dana_pengajuan'] ?? $item->jumlah_dana_pengajuan);
+            $convertToDecimal = function($value) {
+                if(!$value) return 0;
+                $value = str_replace('.', '', $value);
+                $value = str_replace(',', '.', $value);
+                return floatval($value);
+            };
+
+            $item->pph21 = $convertToDecimal($data['hasil_pph21'] ?? $item->pph21);
+            $item->pph22 = $convertToDecimal($data['hasil_pph22'] ?? $item->pph22);
+            $item->pph23 = $convertToDecimal($data['hasil_pph23'] ?? $item->pph23);
+            $item->ppn   = $convertToDecimal($data['hasil_ppn'] ?? $item->ppn);
+            $item->dibayarkan = $convertToDecimal($data['dibayarkan'] ?? $item->dibayarkan);
+            $item->no_rekening = $data['no_rekening'] ?? $item->no_rekening;
+            $item->bank = $data['bank'] ?? $item->bank;
+            $item->save();
+        }
+
+        // Update group agar status pindah ke laporan
+        $group->update([
+            'status' => 'processed',  // biar bisa muncul di dashboard ADUM
+            'kode_akun' => $request->kode_akun ?? $group->kode_akun,
         ]);
 
-        $pengajuan = Pengajuan::findOrFail($id);
-
-         // Simpan kode akun di pengajuan
-        $pengajuan->kode_akun = $request->kode_akun;
-        $pengajuan->save();
-
-        // Hapus honorarium lama (opsional)
-        $pengajuan->honorariums()->delete();
-
-        foreach ($request->items as $item) {
-            $total_honor = $item['jumlah_honor'] * $item['bulan'];
-            $pph21 = $total_honor * 0.15;
-            $jumlah = $total_honor - $pph21;
-
-            $pengajuan->honorariums()->create([
-                'tanggal' => $item['tanggal'] ?? $pengajuan->tanggal,
-                'nama' => $item['nama'],
-                'jabatan' => $item['jabatan'],
-                'uraian' => $item['uraian'],
-                'jumlah_honor' => $item['jumlah_honor'],
-                'bulan' => $item['bulan'],
-                'total_honor' => $total_honor,
-                'pph_21' => $pph21,
-                'jumlah' => $jumlah,
-                'no_rekening' => $item['no_rekening'],
-                'bank' => $item['bank'],
-            ]);
-        }
-
-        $pengajuan->status = 'processed';
-        $pengajuan->save();
-
-        return redirect()->route('keuangan.laporan')
-                        ->with('success', 'Honorarium berhasil disimpan!');
+        return redirect()->route('keuangan.laporan')->with('success', 'Proses keuangan berhasil disimpan!');
     }
 
-    public function storeProses(Request $request, $id)
-    {
-        $pengajuan = Pengajuan::findOrFail($id);
-
-        $convertToDecimal = function($value) {
-            if (!$value) return 0;
-            $value = str_replace('.', '', $value);
-            $value = str_replace(',', '.', $value);
-            return floatval($value);
-        };
-
-        // 🔹 Hapus semua item lama sebelum simpan ulang
-        PengajuanItem::where('pengajuan_id', $pengajuan->id)->delete();
-
-        $uraianList = $request->uraian ?? [];
-
-        foreach ($uraianList as $index => $uraian) {
-            $jumlah = $request->jumlah_pengajuan[$index] ?? null;
-
-            if (
-                (empty($request->detail_akun[$index]) && trim($uraian) === '') ||
-                empty($jumlah)
-            ) continue;
-
-            // 🔹 Ambil nilai hasil pajak (bukan persentase)
-            $pph21 = $convertToDecimal($request->hasil_pph21[$index] ?? 0);
-            $pph22 = $convertToDecimal($request->hasil_pph22[$index] ?? 0);
-            $pph23 = $convertToDecimal($request->hasil_pph23[$index] ?? 0);
-            $ppn   = $convertToDecimal($request->hasil_ppn[$index] ?? 0);
-
-            $jumlahDecimal = $convertToDecimal($jumlah);
-            $totalPajak = $pph21 + $pph22 + $pph23 + $ppn;
-
-            // 🔹 Hitung dibayarkan otomatis jika kosong
-            $dibayarkan = $convertToDecimal($request->dibayarkan[$index] ?? null);
-            if ($dibayarkan == 0) {
-                $dibayarkan = $jumlahDecimal - $totalPajak;
-            }
-
-            PengajuanItem::create([
-                'pengajuan_id' => $pengajuan->id,
-                'invoice' => $request->invoice[$index] ?? null,
-                'nama_barang' => $request->detail_akun[$index] ?? null,
-                'uraian' => $uraian,
-                'jumlah_dana_pengajuan' => $jumlahDecimal,
-                'pph21' => $pph21,
-                'pph22' => $pph22,
-                'pph23' => $pph23,
-                'ppn' => $ppn,
-                'dibayarkan' => $dibayarkan,
-                'no_rekening' => $request->no_rekening[$index] ?? null,
-                'bank' => $request->bank[$index] ?? null,
-            ]);
-        }
-
-        if ($request->filled('kode_akun')) {
-            $pengajuan->kode_akun = $request->kode_akun;
-        }
-
-        $pengajuan->status = 'processed';
-        $pengajuan->save();
-
-        return redirect()->route('keuangan.laporan')
-            ->with('success', 'Data pengajuan berhasil disimpan ke laporan tanpa duplikasi!');
-    }
-
-    public function prosesHonorarium($id)
-    {
-        $pengajuan = Pengajuan::findOrFail($id);
-        return view('keuangan.proses_honorarium', compact('pengajuan'));
-    }
-
-    // Tampilkan tabel laporan
+    // Laporan keuangan
     public function laporan()
     {
-        // ambil semua pengajuan yang sudah diproses
-        $pengajuans = Pengajuan::whereIn('status', ['approved', 'processed'])->get();
-        return view('keuangan.laporan', compact('pengajuans'));
+        $ppkGroups = PpkGroup::with('pengajuan.user')
+                ->whereIn('status', ['processed', 'adum_approved', 'ppk_approved', 'approved'])
+                ->get();
+
+        return view('keuangan.laporan', compact('ppkGroups'));
     }
 
-    public function lihatDetail($id)
+    public function laporan_detail($id)
     {
-        $pengajuan = Pengajuan::with('items', 'honorariums', 'adum', 'ppk', 'verifikator')->findOrFail($id);
-
-        return view('keuangan.laporan_detail', compact('pengajuan'));
+        $group = PpkGroup::with(['pengajuan.items', 'pengajuan.user'])->findOrFail($id);
+        return view('keuangan.laporan_detail', compact('group'));
     }
 
-    public function approveProcess(Request $request, $id)
+    // Form Input Honor
+    public function honorForm()
     {
-        $pengajuan = Pengajuan::findOrFail($id);
-
-        if(auth()->user()->role == 'adum') {
-            $pengajuan->adum_approved_process = true;
-        }
-
-        if(auth()->user()->role == 'ppk') {
-            $pengajuan->ppk_approved_process = true;
-        }
-
-        if(auth()->user()->role == 'verifikator') {
-            $pengajuan->verifikator_approved_process = true;
-        }
-
-        $pengajuan->save();
-
-        return redirect()->route('keuangan.laporan_detail', $id)
-                        ->with('success', 'Proses keuangan berhasil di-approve.');
+        return view('keuangan.honor_input');
     }
 
+    // Simpan Honor
+    public function storeHonor(Request $request)
+    {
+        $request->validate([
+            'nama_kegiatan' => 'required',
+            'waktu' => 'required|date',
+            'alokasi_anggaran' => 'required|numeric',
+            'nama' => 'required',
+            'jabatan' => 'required',
+            'tujuan' => 'required',
+            'uang_harian' => 'required|numeric',
+            'pph21' => 'required',
+            'jumlah_dibayar' => 'required|numeric',
+            'nomor_rekening' => 'required',
+            'atas_nama' => 'required',
+            'bank' => 'required',
+        ]);
+
+        // Hitung jumlah dibayar jika pph manual
+        $uangHarian = $request->uang_harian;
+        $pph21 = ($request->pph21 === 'manual') ? $request->pph21_manual : $request->pph21;
+        $potongan = $uangHarian * ($pph21 / 100);
+        $jumlahDibayar = $uangHarian - $potongan;
+
+        \App\Models\Honor::create([
+            'nama_kegiatan' => $request->nama_kegiatan,
+            'waktu' => $request->waktu,
+            'alokasi_anggaran' => $request->alokasi_anggaran,
+            'nama' => $request->nama,
+            'jabatan' => $request->jabatan,
+            'tujuan' => $request->tujuan,
+            'uang_harian' => $uangHarian,
+            'pph21' => $pph21,
+            'jumlah_dibayar' => $jumlahDibayar,
+            'nomor_rekening' => $request->nomor_rekening,
+            'atas_nama' => $request->atas_nama,
+            'bank' => $request->bank,
+            'status' => 'pending',
+        ]);
+
+        return redirect()->route('keuangan.honor.all')->with('success', 'Data honor berhasil ditambahkan!');
+    }
+
+    // List semua honor
+    public function honorData()
+    {
+        $honors = \App\Models\Honor::latest()->get();
+        return view('keuangan.honor_data', compact('honors'));
+    }
+
+    // Detail honor per ID
+    public function honorDetail($id)
+    {
+        $honor = \App\Models\Honor::findOrFail($id);
+        return view('keuangan.honor_detail', compact('honor'));
+    }
 
 }

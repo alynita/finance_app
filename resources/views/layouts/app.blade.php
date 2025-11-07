@@ -51,6 +51,42 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
 .sidebar a:hover { background:#ddd; }
 .sidebar.collapsed a span { display:none; }
 
+.dropdown {
+    position: relative;
+}
+
+.dropdown-btn {
+    background: none;
+    border: none;
+    color: black;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    padding: 8px 16px;
+}
+
+.dropdown-content {
+    display: none;
+    flex-direction: column;
+    background-color: #50C878;
+    margin-left: 10px;
+}
+
+.dropdown-content a {
+    padding: 6px 20px;
+    color: #ddd;
+    text-decoration: none;
+}
+
+.dropdown-content a:hover {
+    color: #fff;
+}
+
+.dropdown:hover .dropdown-content {
+    display: flex;
+}
+
+
 /* Content */
 .content {
     margin-left:200px;
@@ -92,33 +128,59 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
         <a href="{{ route('pegawai.pengajuan.create') }}"><span>Buat Pengajuan</span></a>
         <a href="{{ route('pegawai.daftar-pengajuan') }}"><span>Daftar Pengajuan</span></a>
 
-    @elseif($user->role == 'penyelenggara_pengadaan')
+    @elseif($user->role == 'sarpras')
+        <a href="{{ route('sarpras.dashboard') }}"><span>Dashboard</span></a>
+        <a href="{{ route('pegawai.pengajuan.create') }}"><span>Buat Pengajuan</span></a>
+        <a href="{{ route('pegawai.daftar-pengajuan') }}"><span>Daftar Pengajuan</span></a>
+
+    @elseif($user->role == 'bmn')
+        <a href="{{ route('bmn.dashboard') }}"><span>Dashboard</span></a>
+        <a href="{{ route('pegawai.pengajuan.create') }}"><span>Buat Pengajuan</span></a>
+        <a href="{{ route('pegawai.daftar-pengajuan') }}"><span>Daftar Pengajuan</span></a>
+
+    @elseif($user->role == 'pengadaan')
         <a href="{{ route('pengadaan.dashboard') }}"><span>Dashboard</span></a>
-        <a href="{{ route('pengadaan.view-arsip') }}"><span>Arsip</span></a>
+        <a href="{{ route('pengadaan.arsip') }}"><span>Arsip</span></a>
+
+    @elseif(str_starts_with($user->role, 'timker_')) {{-- timker1–timker6 --}}
+        <a href="{{ route($user->role . '.dashboard') }}"><span>Dashboard</span></a>
+        <a href="{{ route($user->role . '.pengajuan') }}"><span>Pengajuan</span></a>
 
     @elseif($user->role == 'adum')
         <a href="{{ route('adum.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('adum.pengajuan') }}"><span>Pengajuan</span></a>
         <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
+        <a href="{{ route('honor.dashboard') }}"><span>Approval Honor</span></a>
 
     @elseif($user->role == 'ppk')
         <a href="{{ route('ppk.dashboard') }}"><span>Dashboard</span></a>
-        <a href="{{ route('ppk.pengajuan') }}"><span>Pengajuan</span></a>
+        <a href="{{ route('ppk.approve') }}"><span>Draf</span></a>
         <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
+        <a href="{{ route('honor.dashboard') }}"><span>Approval Honor</span></a>
 
     @elseif($user->role == 'keuangan')
-        <a href="{{ route('keuangan.dashboard') }}"><span>Dashboard</span></a>
-        <a href="{{ route('keuangan.laporan') }}"><span>Laporan</span></a>
+    <a href="{{ route('keuangan.dashboard') }}"><span>Dashboard</span></a>
+    <a href="{{ route('keuangan.laporan') }}"><span>Laporan</span></a>
+
+    <!-- Dropdown untuk menu Honor -->
+    <div class="dropdown">
+        <button class="dropdown-btn"><span>Honor</span></button>
+        <div class="dropdown-content">
+            <a href="{{ route('keuangan.honor.form') }}">Pengajuan Honor</a>
+            <a href="{{ route('keuangan.honor.data') }}">Data Honor</a>
+        </div>
+    </div>
 
     @elseif($user->role == 'verifikator')
         <a href="{{ route('verifikator.dashboard') }}"><span>Dashboard</span></a>
 
-    @elseif($user->role== 'bendahara')
+    @elseif($user->role == 'bendahara')
         <a href="{{ route('bendahara.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('bendahara.arsip') }}"><span>Arsip</span></a>
     @endif
 
     <a href="{{ route('profile.edit') }}"><span>Profile</span></a>
+
 </div>
 
 <!-- Content -->

@@ -17,7 +17,8 @@
         </div>
     @endif
 
-    @forelse($pengajuans as $pengajuan)
+    @forelse($pengajuans as $group)
+        @php $pengajuan = $group->pengajuan; @endphp
         <div style="border:1px solid #ccc; padding:15px; margin-bottom:20px; border-radius:5px;">
             <table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
                 <tr>
@@ -38,12 +39,12 @@
                 <tr>
                     <td><strong>Kode Akun</strong></td>
                     <td>:</td>
-                    <td>{{ $pengajuan->kode_akun ?? '-' }}</td>
+                    <td>{{ $group->kode_akun ?? '-' }}</td>
                 </tr>
-            </table> 
+            </table>
 
+            {{-- === HONORARIUM === --}}
             @if($pengajuan->jenis_pengajuan === 'honor')
-                {{-- Tabel Honorarium --}}
                 <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:collapse; margin-top:1rem;">
                     <thead>
                         <tr>
@@ -88,13 +89,15 @@
                         @endforeach
                     </tbody>
                 </table>
+
+            {{-- === PENGAJUAN LAIN === --}}
             @else
-                {{-- Tabel Pengajuan Lain --}}
                 <table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse:collapse; margin-top:10px;">
                     <thead>
                         <tr>
                             <th>No</th>
                             <th>Nama / Invoice</th>
+                            <th>Nama Barang</th>
                             <th>Detail Akun</th>
                             <th>Uraian</th>
                             <th>Jumlah Pengajuan</th>
@@ -110,7 +113,7 @@
                             $totalPajak = 0;
                             $totalDibayarkan = 0;
                         @endphp
-                        @foreach($pengajuan->items as $index => $item)
+                        @foreach($group->items as $index => $item)
                             @php
                                 $pph21 = $item->pph21 ?? 0;
                                 $pph22 = $item->pph22 ?? 0;
@@ -124,6 +127,7 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $item->invoice ?? '-' }}</td>
                                 <td>{{ $item->nama_barang ?? $item->nama }}</td>
+                                <td>{{ $item->detail_akun ?? '-' }}</td>
                                 <td>{{ $item->uraian ?? '-' }}</td>
                                 <td>{{ number_format($item->jumlah_dana_pengajuan ?? 0,2,',','.') }}</td>
                                 <td>{{ number_format($pph21,2,',','.') }}</td>
@@ -142,12 +146,18 @@
                     </tbody>
                 </table>
             @endif
-            <div style="margin-top:10px;">
-                    <a href="{{ route('proses.approve', $pengajuan->id) }}" 
-                        onclick="return confirm('Yakin ingin approve pengajuan ini?')" 
-                        style="padding:0.5rem 1rem; background-color:#28a745; color:white; border-radius:5px; text-decoration:none;">Approve</a>
+
+            {{-- === ACTION BUTTONS === --}}
+            <div style="margin-top:15px; display:flex; gap:10px;">
+                <a href="{{ route('proses.approve', $pengajuan->id) }}" 
+                    onclick="return confirm('Yakin ingin approve pengajuan ini?')" 
+                    style="padding:0.5rem 1rem; background-color:#28a745; color:white; border-radius:5px; text-decoration:none;">Approve</a>
+
+                <a href="{{ route('proses.reject', $pengajuan->id) }}" 
+                    onclick="return confirm('Yakin ingin reject pengajuan ini?')" 
+                    style="padding:0.5rem 1rem; background-color:#dc3545; color:white; border-radius:5px; text-decoration:none;">Reject</a>
             </div>
-        </div> {{-- div pengajuan ditutup di sini --}}
+        </div>
     @empty
         <p>Tidak ada pengajuan untuk diapprove.</p>
     @endforelse

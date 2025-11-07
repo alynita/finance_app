@@ -111,14 +111,10 @@
 
         <!-- Verifikator kanan -->
         <td style="width:33%; text-align:center; vertical-align:top; border:none;">
-            <div>MENGETAHUI</div>
-            <div>Verifikator</div>
+            <div>PENANGGUNG JAWAB</div>
             <div style="margin-top:60px;">
-                @if($pengajuan->verifikator_approved_process)
-                    <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
-                @endif
-                {{ $pengajuan->verifikator->name ?? 'Nama Verifikator' }}<br>
-                NIP. {{ $pengajuan->verifikator->nip ?? '-' }}
+                {{ $pengajuan->user->name ?? 'Nama Penanggung Jawab' }}<br>
+                NIP. {{ $pengajuan->user->nip ?? '-' }}
             </div>
         </td>
     </tr>

@@ -35,12 +35,18 @@ class AuthenticatedSessionController extends Controller
 
             if ($user->role === 'admin') {
                 return redirect()->intended('/admin/dashboard');
-            }elseif ($user->role === 'pegawai') {
+            } elseif ($user->role === 'pegawai') {
                 return redirect()->intended('/pegawai/dashboard');
-            }elseif ($user->role === 'penyelenggara_pengadaan') {
+            } elseif ($user->role === 'sarpras') {
+                return redirect()->intended('/sarpras/dashboard');
+            } elseif ($user->role === 'bmn') {
+                return redirect()->intended('/bmn/dashboard');
+            } elseif ($user->role === 'pengadaan') {
                 return redirect()->intended('/pengadaan/dashboard');
             } elseif ($user->role === 'adum') {
                 return redirect()->intended('/adum/dashboard');
+            } elseif (str_starts_with($user->role, 'timker_')) { // timker1–timker6
+                return redirect()->intended('/' . $user->role . '/dashboard'); // misal /timker1/dashboard
             } elseif ($user->role === 'ppk') {
                 return redirect()->intended('/ppk/dashboard');
             } elseif ($user->role === 'keuangan') {

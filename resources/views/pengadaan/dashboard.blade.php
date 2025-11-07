@@ -1,128 +1,52 @@
 @extends('layouts.app')
 
-@section('title','Dashboard Pengadaan')
-@section('header','Dashboard Pengadaan')
+@section('title', 'Dashboard Pengadaan')
+@section('header', 'Dashboard Pengadaan')
 
 @section('content')
-<h2>Daftar Pengajuan</h2>
+<div style="max-width:1200px; margin:auto;">
+    <h3>Daftar Grup Pengajuan Pending Pengadaan</h3>
 
-@foreach($pengajuans as $p)
-    @php
-        // Tentukan warna status
-        $statusColor = 'gray';
-        switch(strtolower($p->status)) {
-            case 'pending':
-            case 'pending_pj':
-            case 'pending_adum':
-            case 'pending_ppk':
-                $statusColor = '#facc15'; // kuning
-                break;
-            case 'approved':
-                $statusColor = '#4ade80'; // hijau
-                break;
-            case 'rejected':
-            case 'rejected_adum':
-            case 'rejected_ppk':
-                $statusColor = '#f87171'; // merah
-                break;
-        }
-    @endphp
-
-    <h3>{{ $p->nama_kegiatan }} ({{ ucfirst($p->jenis_pengajuan) }}) - 
-        <span style="background: {{ $statusColor }}; color: #000; padding:0.2rem 0.5rem; border-radius:4px; font-weight:bold;">
-            {{ ucfirst($p->status) }}
-        </span>
-    </h3>
-    <p>Pengaju: {{ $p->user->name ?? '-' }} | Tanggal: {{ $p->created_at ? $p->created_at->format('d-m-Y') : '-' }}</p>
-
-    <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width:100%; margin-bottom:1rem;">
+    <table style="width:100%; border-collapse:collapse; margin-top:1rem;">
         <thead>
-            <tr style="background:#f2f2f2;">
-                @if($p->jenis_pengajuan === 'pembelian')
-                    <th>Nama Barang</th>
-                    <th>Volume</th>
-                    <th>KRO/Kode Akun</th>
-                    <th>Harga Satuan</th>
-                    <th>Jumlah Dana</th>
-                    <th>Ongkos Kirim</th>
-                @elseif($p->jenis_pengajuan === 'kerusakan')
-                    <th>Nama Barang</th>
-                    <th>Volume</th>
-                    <th>Lokasi</th>
-                    <th>Jenis Kerusakan</th>
-                    <th>Harga Satuan</th>
-                    <th>Jumlah Dana</th>
-                    <th>Foto</th>
-                @elseif($p->jenis_pengajuan === 'honor')
-                    <th>Tanggal</th>
-                    <th>Nama</th>
-                    <th>Jabatan</th>
-                @endif
+            <tr>
+                <th style="border:1px solid #ccc; padding:0.5rem;">No</th>
+                <th style="border:1px solid #ccc; padding:0.5rem;">Nama Kegiatan</th>
+                <th style="border:1px solid #ccc; padding:0.5rem;">Pengaju</th>
+                <th style="border:1px solid #ccc; padding:0.5rem;">Status</th>
+                <th style="border:1px solid #ccc; padding:0.5rem;">Dibuat</th>
+                <th style="border:1px solid #ccc; padding:0.5rem;">Aksi</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($p->items as $item)
-                <tr>
-                    @if($p->jenis_pengajuan === 'pembelian')
-                        <td>{{ $item->nama_barang ?? $item->nama ?? '-' }}</td>
-                        <td>{{ $item->volume ?? '-' }}</td>
-                        <td>{{ $item->kro ?? '-' }}</td>
-                        <td>{{ $item->harga_satuan ?? '-' }}</td>
-                        <td>{{ $item->jumlah_dana_pengajuan ?? '-' }}</td>
-                        <td>{{ $item->ongkos_kirim ?? '-' }}</td>
-                    @elseif($p->jenis_pengajuan === 'kerusakan')
-                        <td>{{ $item->nama_barang ?? $item->nama ?? '-' }}</td>
-                        <td>{{ $item->volume ?? '-' }}</td>
-                        <td>{{ $item->lokasi ?? '-' }}</td>
-                        <td>{{ $item->jenis_kerusakan ?? '-' }}</td>
-                        <td>{{ $item->harga_satuan ?? '-' }}</td>
-                        <td>{{ $item->jumlah_dana_pengajuan ?? '-' }}</td>
-                        <td>
-                            @if($item->foto)
-                                <a href="{{ asset('storage/' . $item->foto) }}" target="_blank">Lihat</a>
-                            @else
-                                -
-                            @endif
-                        </td>
-                    @elseif($p->jenis_pengajuan === 'honor')
-                        <td>{{ $item->tanggal ?? '-' }}</td>
-                        <td>{{ $item->nama ?? '-' }}</td>
-                        <td>{{ $item->jabatan ?? '-' }}</td>
-                    @endif
-                </tr>
-            @endforeach
+            @forelse($groups as $index => $group)
+            <tr>
+                <td style="border:1px solid #ccc; padding:0.5rem;">{{ $index + 1 }}</td>
+                <td style="border:1px solid #ccc; padding:0.5rem;">
+                    {{ $group->pengajuan->nama_kegiatan }}
+                </td>
+                <td style="border:1px solid #ccc; padding:0.5rem;">{{ $group->pengajuan->user->name }}</td>
+                <td style="border:1px solid #ccc; padding:0.5rem;">
+                    {{ ucfirst(str_replace('_',' ',$group->status)) }}
+                </td>
+                <td style="border:1px solid #ccc; padding:0.5rem;">
+                    {{ $group->created_at->format('d M Y H:i') }}
+                </td>
+                <td style="border:1px solid #ccc; padding:0.5rem;">
+                    <a href="{{ route('pengadaan.showGroup', $group->id) }}"
+                    style="padding:6px 12px; background:#008CBA; color:white; border-radius:4px; text-decoration:none;">
+                    Lihat Detail
+                    </a>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="7" style="border:1px solid #ccc; padding:0.5rem; text-align:center;">
+                    Tidak ada grup pending pengadaan.
+                </td>
+            </tr>
+            @endforelse
         </tbody>
     </table>
-
-    @if($p->status === 'approved_ppk')
-        <form method="POST" action="{{ route('pengadaan.arsip', $p->id) }}">
-            @csrf
-            <button type="submit" style="
-                background-color: #4CAF50; 
-                color: white; 
-                padding: 0.5rem 1rem; 
-                border: none; 
-                border-radius: 4px; 
-                cursor: pointer;
-                transition: background 0.2s;
-            " onmouseover="this.style.backgroundColor='#45a049'" onmouseout="this.style.backgroundColor='#4CAF50'">
-                Simpan Arsip
-            </button>
-        </form>
-    @else
-        <button style="
-            background-color: #ccc; 
-            color: #666; 
-            padding: 0.5rem 1rem; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: not-allowed;
-        " disabled>
-            Menunggu Approve
-        </button>
-    @endif
-
-    <hr>
-@endforeach
-
+</div>
 @endsection

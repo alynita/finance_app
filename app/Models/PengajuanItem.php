@@ -22,6 +22,10 @@ class PengajuanItem extends Model
         'jumlah_dana_pengajuan',
         'kro',
         'foto',
+        'link',
+        'ppk_group_id',
+        'status_ppk',
+        'catatan_ppk',
         'tanggal',
         'nama',
         'jabatan',
@@ -43,6 +47,11 @@ class PengajuanItem extends Model
     public function pengajuan()
     {
         return $this->belongsTo(Pengajuan::class);
+    }
+
+    public function ppkGroup()
+    {
+        return $this->belongsTo(PpkGroup::class, 'ppk_group_id');
     }
 
     // 💡 otomatis hitung jumlah_dana_pengajuan saat membuat item

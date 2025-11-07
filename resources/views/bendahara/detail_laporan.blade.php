@@ -33,7 +33,7 @@
         <tr>
             <td><strong>Kode Akun</strong></td>
             <td>:</td>
-            <td>{{ $pengajuan->kode_akun ?? '-' }}</td>
+            <td>{{ $group->kode_akun ?? '-' }}</td>
         </tr>
     </table>
 
@@ -104,7 +104,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach($pengajuan->items as $index => $item)
+                @foreach($group->items as $index => $item)
                     @php
                         // skip baris kosong
                         if (!$item->jumlah_dana_pengajuan) continue;
@@ -145,17 +145,18 @@
 
     {{-- Tanda tangan --}}
     <div style="display:flex; justify-content:space-between; margin-top:40px;">
+
         {{-- ADUM --}}
         <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center;">
             <div>MENGETAHUI</div>
             <div>Subbagian Administrasi Umum</div>
             <div style="margin-top:60px;">
-                @if($pengajuan->adum_approved_process)
+                @if($group->adum_approved_process)
                     <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
-                    {{ $pengajuan->adum->name ?? 'Nama ADUM' }}<br>
-                    NIP. {{ $pengajuan->adum->nip ?? '-' }}
+                    {{ $group->adum->name ?? 'Nama ADUM' }}<br>
+                    NIP. {{ $group->adum->nip ?? '-' }}
                 @else
-                    Tanda tangan menunggu approve
+                    <em style="color:red;">Tanda tangan menunggu approve</em>
                 @endif
             </div>
         </div>
@@ -165,30 +166,31 @@
             <div>MENYETUJUI</div>
             <div>PPK</div>
             <div style="margin-top:60px;">
-                @if($pengajuan->ppk_approved_process)
+                @if($group->ppk_approved_process)
                     <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
-                    {{ $pengajuan->ppk->name ?? 'Nama PPK' }}<br>
-                    NIP. {{ $pengajuan->ppk->nip ?? '-' }}
+                    {{ $group->ppk->name ?? 'Nama PPK' }}<br>
+                    NIP. {{ $group->ppk->nip ?? '-' }}
                 @else
-                    Tanda tangan menunggu approve
+                    <em style="color:red;">Tanda tangan menunggu approve</em>
                 @endif
             </div>
         </div>
 
-        {{-- Verifikator --}}
+        {{-- VERIFIKATOR --}}
         <div style="flex:1; text-align:center;">
             <div>MENGETAHUI</div>
             <div>Verifikator</div>
             <div style="margin-top:60px;">
-                @if($pengajuan->verifikator_approved_process)
+                @if($group->verifikator_approved_process)
                     <div style="opacity:0.6; font-weight:bold;">APPROVED</div>
-                    {{ $pengajuan->verifikator->name ?? 'Nama Verifikator' }}<br>
-                    NIP. {{ $pengajuan->verifikator->nip ?? '-'}}
+                    {{ $group->verifikator->name ?? 'Nama Verifikator' }}<br>
+                    NIP. {{ $group->verifikator->nip ?? '-' }}
                 @else
-                    <div>Tanda tangan menunggu approve</div>
+                    <div><em style="color:red;">Tanda tangan menunggu approve</em></div>
                 @endif
             </div>
         </div>
     </div>
+
 </div>
 @endsection

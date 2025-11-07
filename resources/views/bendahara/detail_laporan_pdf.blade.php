@@ -18,7 +18,7 @@
             align-items: flex-start;
         }
         .ttd { text-align: center; width: 30%; }
-        .ttd.ppk { margin-top: 40px; } /* PPK agak ke bawah */
+        .ttd.ppk { margin-top: 40px; }
     </style>
 </head>
 <body>
@@ -32,42 +32,10 @@
 <p><strong>Kode Akun:</strong> {{ $pengajuan->kode_akun ?? '-' }}</p>
 
 {{-- Tabel Detail Keuangan --}}
-@if($pengajuan->jenis_pengajuan === 'honor')
-<table>
-    <thead>
-        <tr>
-            <th>Tanggal</th>
-            <th>Nama</th>
-            <th>Jabatan</th>
-            <th>Uraian</th>
-            <th>Jumlah Honor</th>
-            <th>Bulan</th>
-            <th>Total Honor</th>
-            <th>PPH 21</th>
-            <th>Jumlah Akhir</th>
-            <th>No Rekening</th>
-            <th>Bank</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach($pengajuan->honorariums as $index => $h)
-        <tr>
-            <td>{{ $h->tanggal }}</td>
-            <td>{{ $h->nama }}</td>
-            <td>{{ $h->jabatan }}</td>
-            <td>{{ $h->uraian }}</td>
-            <td>{{ number_format($h->jumlah_honor,0,',','.') }}</td>
-            <td>{{ $h->bulan }}</td>
-            <td>{{ number_format($h->total_honor,0,',','.') }}</td>
-            <td>{{ number_format($h->pph_21,0,',','.') }}</td>
-            <td>{{ number_format($h->jumlah,0,',','.') }}</td>
-            <td>{{ $h->no_rekening }}</td>
-            <td>{{ $h->bank }}</td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
-@else
+@php
+    $totalPajak = 0;
+    $totalDiterima = 0;
+@endphp
 <table>
     <thead>
         <tr>
@@ -86,29 +54,44 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($pengajuan->items as $index => $item)
+        @foreach($group->items as $index => $item)
+        @php
+            $pph21 = $item->pph21 ?? 0;
+            $pph22 = $item->pph22 ?? 0;
+            $pph23 = $item->pph23 ?? 0;
+            $ppn   = $item->ppn ?? 0;
+            $dibayarkan = $item->dibayarkan ?? ($item->jumlah_dana_pengajuan - ($pph21+$pph22+$pph23+$ppn));
+
+            $totalPajak += ($pph21 + $pph22 + $pph23 + $ppn);
+            $totalDiterima += $dibayarkan;
+        @endphp
         <tr>
             <td>{{ $index + 1 }}</td>
             <td>{{ $item->invoice ?? '-' }}</td>
             <td>{{ $item->nama_barang ?? $item->nama }}</td>
             <td>{{ $item->uraian ?? 'Tidak ada uraian' }}</td>
             <td>{{ number_format($item->jumlah_dana_pengajuan,0,',','.') }}</td>
-            <td>{{ number_format($item->pph21 ?? 0,0,',','.') }}</td>
-            <td>{{ number_format($item->pph22 ?? 0,0,',','.') }}</td>
-            <td>{{ number_format($item->pph23 ?? 0,0,',','.') }}</td>
-            <td>{{ number_format($item->ppn ?? 0,0,',','.') }}</td>
-            <td>{{ number_format($item->dibayarkan ?? 0,0,',','.') }}</td>
+            <td>{{ number_format($pph21,0,',','.') }}</td>
+            <td>{{ number_format($pph22,0,',','.') }}</td>
+            <td>{{ number_format($pph23,0,',','.') }}</td>
+            <td>{{ number_format($ppn,0,',','.') }}</td>
+            <td>{{ number_format($dibayarkan,0,',','.') }}</td>
             <td>{{ $item->no_rekening ?? '-' }}</td>
             <td>{{ $item->bank ?? '-' }}</td>
         </tr>
         @endforeach
     </tbody>
 </table>
-@endif
 
+{{-- Total Pajak & Total Diterima --}}
+<div style="margin-top:1rem; padding:10px; border:1px solid #000; border-radius:5px; width:300px;">
+    <p><strong>Total Pajak:</strong> Rp {{ number_format($totalPajak,0,',','.') }}</p>
+    <p><strong>Total Diterima:</strong> Rp {{ number_format($totalDiterima,0,',','.') }}</p>
+</div>
+
+{{-- Tanda Tangan --}}
 <table style="width:100%; margin-top:80px; border-collapse:collapse; border:none;">
     <tr>
-        <!-- ADUM kiri -->
         <td style="width:33%; text-align:center; vertical-align:top; border:none;">
             <div>MENGETAHUI</div>
             <div>Subbagian Administrasi Umum</div>
@@ -121,7 +104,6 @@
             </div>
         </td>
 
-        <!-- PPK tengah -->
         <td style="width:33%; text-align:center; vertical-align:bottom; border:none;">
             <div>MENYETUJUI</div>
             <div>PPK</div>
@@ -134,7 +116,6 @@
             </div>
         </td>
 
-        <!-- Verifikator kanan -->
         <td style="width:33%; text-align:center; vertical-align:top; border:none;">
             <div>MENGETAHUI</div>
             <div>Verifikator</div>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
+use App\Models\PpkGroup;
 use Illuminate\Support\Facades\Auth;
 
 class ProsesKeuanganController extends Controller
@@ -13,19 +14,19 @@ class ProsesKeuanganController extends Controller
         $user = auth()->user();
 
         if ($user->role === 'adum') {
-            $pengajuans = Pengajuan::with('items', 'user')
+            $pengajuans = PpkGroup::with('pengajuan.user', 'items')
                 ->where('status', 'processed')
                 ->where('adum_approved_process', 0)
                 ->get();
         } elseif ($user->role === 'ppk') {
-            $pengajuans = Pengajuan::with('items', 'user')
-                ->where('status', 'processed')
+            $pengajuans = PpkGroup::with('pengajuan.user', 'items')
+                ->where('status', 'adum_approved')
                 ->where('adum_approved_process', 1)
                 ->where('ppk_approved_process', 0)
                 ->get();
         } elseif ($user->role === 'verifikator') {
-            $pengajuans = Pengajuan::with('items', 'user')
-                ->where('status', 'processed')
+            $pengajuans = PpkGroup::with('pengajuan.user', 'items')
+                ->where('status', 'ppk_approved')
                 ->where('adum_approved_process', 1)
                 ->where('ppk_approved_process', 1)
                 ->where('verifikator_approved_process', 0)
@@ -39,39 +40,51 @@ class ProsesKeuanganController extends Controller
 
     public function approve($id)
     {
-        $pengajuan = Pengajuan::findOrFail($id);
+        $group = PpkGroup::with('pengajuan')->findOrFail($id);
         $user = auth()->user();
 
         switch ($user->role) {
             case 'adum':
-                $pengajuan->adum_approved_process = 1;
-                $pengajuan->adum_id = $user->id; // simpan ID ADUM
+                $group->adum_approved_process = 1;
+                $group->adum_id = $user->id;
+                $group->status = 'adum_approved'; // status baru
                 break;
 
             case 'ppk':
-                if ($pengajuan->adum_approved_process != 1) {
+                if ($group->adum_approved_process != 1) {
                     return back()->with('error', 'Harus diapprove ADUM dulu!');
                 }
-                $pengajuan->ppk_approved_process = 1;
-                $pengajuan->ppk_id = $user->id; // simpan ID PPK
+                $group->ppk_approved_process = 1;
+                $group->ppk_id = $user->id;
+                $group->status = 'ppk_approved';
                 break;
 
             case 'verifikator':
-                if ($pengajuan->adum_approved_process != 1 || $pengajuan->ppk_approved_process != 1) {
+                if ($group->adum_approved_process != 1 || $group->ppk_approved_process != 1) {
                     return back()->with('error', 'Harus disetujui ADUM dan PPK dulu!');
                 }
-                $pengajuan->verifikator_approved_process = 1;
-                $pengajuan->verifikator_id = $user->id; // simpan ID verifikator
-                $pengajuan->status = 'approved'; // status akhir setelah verifikator approve
+                $group->verifikator_approved_process = 1;
+                $group->verifikator_id = $user->id;
+                $group->status = 'approved';
                 break;
 
             default:
                 return back()->with('error', 'Role tidak memiliki hak approve.');
         }
 
-        $pengajuan->save();
+        $group->save();
 
         return back()->with('success', 'Pengajuan berhasil diapprove!');
     }
+
+    public function reject($id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+        $pengajuan->status = 'rejected';
+        $pengajuan->save();
+
+        return redirect()->back()->with('success', 'Pengajuan berhasil direject.');
+    }
+
 
 }

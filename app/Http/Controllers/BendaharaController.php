@@ -11,18 +11,33 @@ class BendaharaController extends Controller
     // Dashboard pengajuan aktif
     public function dashboard()
     {
-        $laporans = Pengajuan::whereIn('status', ['processed','approved'])
-            ->where('arsip', false)
+        // Bendahara bisa melihat semua pengajuan yang sudah diproses keuangan
+        $laporans = \App\Models\PpkGroup::with(['pengajuan.user', 'items'])
+            ->whereIn('status', [
+                'processed',       // baru disimpan keuangan
+                'adum_approved',   // sudah disetujui adum
+                'ppk_approved',    // sudah disetujui ppk
+                'approved',        // sudah disetujui semua
+                'completed'        // sudah selesai
+            ])
             ->get();
 
         return view('bendahara.dashboard', compact('laporans'));
     }
 
     // Detail laporan
-    public function show($id)
+    public function show($groupId)
     {
-        $pengajuan = Pengajuan::with(['items', 'honorariums', 'adum', 'ppk', 'verifikator'])->findOrFail($id);
-        return view('bendahara.detail_laporan', compact('pengajuan'));
+        $group = \App\Models\PpkGroup::with([
+            'pengajuan.user', 
+            'items', 
+            'pengajuan.adum', 
+            'pengajuan.ppk', 
+            'pengajuan.verifikator'
+        ])->findOrFail($groupId);
+
+        $pengajuan = $group->pengajuan; // tetap buat variabel $pengajuan agar view lama jalan
+        return view('bendahara.detail_laporan', compact('group','pengajuan'));
     }
 
     // Simpan arsip

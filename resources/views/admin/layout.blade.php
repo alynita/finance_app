@@ -13,8 +13,8 @@
             background-color: #F8F9FA;
             color: #0D1B2A;
             display: flex;
-            font-size: 16px;      /* default ukuran teks */
-            line-height: 1.6;     /* jarak antarbaris */
+            font-size: 16px;
+            line-height: 1.6;
         }
 
         /* ===================== SIDEBAR ===================== */
@@ -79,14 +79,7 @@
             font-size: 16px;
         }
 
-        /* Card judul */
-        .card h3 {
-            font-size: 20px;
-            margin-bottom: 1rem;
-            font-weight: 600;
-        }
-
-        /* ===================== TABLE ===================== */
+        /* Table */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -105,7 +98,7 @@
             font-weight: 600;
         }
 
-        /* ===================== BUTTON ===================== */
+        /* Button */
         .btn {
             background-color: #C19A6B;
             color: white;
@@ -122,7 +115,7 @@
             background-color: #a57f55;
         }
 
-        /* ===================== FORM / SELECT ===================== */
+        /* Form */
         select, input, textarea {
             padding: 0.5rem 0.8rem;
             border-radius: 6px;
@@ -133,7 +126,7 @@
             margin-bottom: 1rem;
         }
 
-        /* ===================== ALERT ===================== */
+        /* Alert */
         .alert {
             padding: 0.8rem 1rem;
             background-color: #DFF2BF;
@@ -143,7 +136,56 @@
             font-size: 16px;
         }
 
+        /* Grid Statistik */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+        }
+
+        .icon {
+            font-size: 32px;
+            background-color: #C19A6B;
+            color: white;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+        }
+
+        .details h4 {
+            margin: 0;
+            font-size: 18px;
+            color: #0D1B2A;
+            font-weight: 600;
+        }
+
+        .details p {
+            margin: 0.2rem 0 0 0;
+            font-size: 20px;
+            font-weight: 700;
+            color: #C19A6B;
+        }
     </style>
+    @stack('styles')
 </head>
 <body>
 
@@ -151,7 +193,7 @@
         <h2>Admin BBPK</h2>
         <a href="{{ route('admin.dashboard') }}">📊 Dashboard</a>
         <a href="{{ route('admin.users') }}">👥 Manajemen Pengguna</a>
-        <!-- Logout aman -->
+        <a href="{{ route('admin.kro.index') }}">🗂️ Manajemen KRO</a>
         <form action="{{ route('logout') }}" method="POST" style="margin-top: 2rem;">
             @csrf
             <button type="submit" class="btn" style="width:100%; text-align:left;">
