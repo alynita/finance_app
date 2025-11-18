@@ -7,6 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -25,45 +26,44 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        $login = $request->login;
+        $password = $request->password;
 
-            // Redirect berdasarkan role
-            $user = Auth::user();
+        // Cari user berdasarkan email atau NIP
+        $user = \App\Models\User::where('email', $login)
+                ->orWhere('nip', $login)
+                ->first();
 
-            if ($user->role === 'admin') {
-                return redirect()->intended('/admin/dashboard');
-            } elseif ($user->role === 'pegawai') {
-                return redirect()->intended('/pegawai/dashboard');
-            } elseif ($user->role === 'sarpras') {
-                return redirect()->intended('/sarpras/dashboard');
-            } elseif ($user->role === 'bmn') {
-                return redirect()->intended('/bmn/dashboard');
-            } elseif ($user->role === 'pengadaan') {
-                return redirect()->intended('/pengadaan/dashboard');
-            } elseif ($user->role === 'adum') {
-                return redirect()->intended('/adum/dashboard');
-            } elseif (str_starts_with($user->role, 'timker_')) { // timker1–timker6
-                return redirect()->intended('/' . $user->role . '/dashboard'); // misal /timker1/dashboard
-            } elseif ($user->role === 'ppk') {
-                return redirect()->intended('/ppk/dashboard');
-            } elseif ($user->role === 'keuangan') {
-                return redirect()->intended('/keuangan/dashboard');
-            } elseif ($user->role === 'verifikator') {
-                return redirect()->intended('/verifikator/dashboard');
-            } elseif ($user->role === 'bendahara') {
-                return redirect()->intended('/bendahara/dashboard');
-            } else {
-                return redirect()->intended('/dashboard');
-            }
+        if (!$user || !Hash::check($password, $user->password)) {
+            return back()->withErrors([
+                'login' => 'Email/NIP atau password salah',
+            ])->onlyInput('login');
         }
 
-        // Kalau login gagal
-        return back()->withErrors([
-            'email' => 'Email atau password salah',
-        ])->onlyInput('email');
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        // Redirect berdasarkan role
+        switch($user->role) {
+            case 'admin': return redirect()->intended('/admin/dashboard');
+            case 'pegawai': return redirect()->intended('/pegawai/dashboard');
+            case 'sarpras': return redirect()->intended('/sarpras/dashboard');
+            case 'bmn': return redirect()->intended('/bmn/dashboard');
+            case 'pengadaan': return redirect()->intended('/pengadaan/dashboard');
+            case 'adum': return redirect()->intended('/adum/dashboard');
+            case (str_starts_with($user->role, 'timker_')): 
+                return redirect()->intended('/' . $user->role . '/dashboard');
+            case 'ppk': return redirect()->intended('/ppk/dashboard');
+            case 'keuangan': return redirect()->intended('/keuangan/dashboard');
+            case 'verifikator': return redirect()->intended('/verifikator/dashboard');
+            case 'bendahara': return redirect()->intended('/bendahara/dashboard');
+            default: return redirect()->intended('/dashboard');
+        }
     }
 
     /**

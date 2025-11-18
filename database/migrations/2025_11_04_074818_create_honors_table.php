@@ -9,19 +9,25 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('honors', function (Blueprint $table) {
             $table->id();
-            $table->string('nama');
-            $table->string('jabatan');
-            $table->string('tujuan');
-            $table->decimal('uang_harian', 15, 2);
-            $table->decimal('persentase', 5, 2);
-            $table->decimal('jumlah_dibayar', 15, 2);
-            $table->string('nomor_rekening');
-            $table->string('atas_nama');
-            $table->string('bank');
+            $table->string('nama_kegiatan');
+            $table->date('waktu');
+            $table->decimal('alokasi_anggaran', 15, 2);
+
+            // Approval tracking
+            $table->unsignedBigInteger('adum_id')->nullable();
+            $table->timestamp('adum_approved_at')->nullable();
+            $table->unsignedBigInteger('ppk_id')->nullable();
+            $table->timestamp('ppk_approved_at')->nullable();
+
+            // Pengaju / pembuat data
+            $table->unsignedBigInteger('user_id')->nullable();
+
+            $table->string('status')->default('pending');
+
             $table->timestamps();
         });
     }

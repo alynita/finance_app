@@ -1,28 +1,83 @@
 @extends('layouts.app')
 
-@section('title', 'Pengajuan Pembelian Barang')
+@section('title', 'Form Pengajuan Pembelian Barang')
 @section('header', 'Form Pengajuan Pembelian Barang')
 
+<style>
+.kro-dropdown-wrapper {
+    position: relative; /* penting */
+    margin-bottom: 1rem;
+}
+
+.kro-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.kro-menu {
+    position: absolute;
+    top: 100%;  /* tepat di bawah input */
+    left: 0;
+    width: 100%;
+    max-height: 250px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow-y: auto;
+    display: none;
+    z-index: 9999;
+    padding: 10px;
+}
+
+.kro-menu .tree-root {
+    font-size: 13px;
+}
+
+.kro-input {
+    width: 100% !important;
+    padding: 12px;
+    font-size: 20x; /* <— perbesar tulisan input */
+}
+
+.kro-dropdown {
+    width: 100%;
+    border: 1px solid #ccc;
+    padding: 12px;
+    margin-top: 5px;
+    border-radius: 5px;
+    background: white;
+    font-size: 20px; /* <— perbesar tulisan list KRO */
+}
+
+.kro-dropdown li, 
+.kro-dropdown span {
+    font-size: 20px; /* <— semua teks di dalam list */
+}
+
+</style>
+
+
 @section('content')
-<div style="max-width:800px; margin:auto;">
+<div style="max-width:900px;margin:auto;">
     <form action="{{ route('pegawai.pengajuan.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
+        <!-- Informasi Pengajuan -->
         <div style="margin-bottom:1rem; padding:1rem; border:1px solid #ccc; border-radius:5px;">
             <h3>Informasi Pengajuan</h3>
-
             <label>Nama Kegiatan</label>
-            <input type="text" name="nama_kegiatan" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+            <input type="text" name="nama_kegiatan" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;" required>
 
             <label>Waktu Kegiatan</label>
-            <input type="datetime-local" name="waktu_kegiatan" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+            <input type="datetime-local" name="waktu_kegiatan" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;" required>
 
             <input type="hidden" name="jenis_pengajuan" value="pembelian">
-        </div>
 
-        <div style="margin-bottom:1rem;">
-            <label for="mengetahui">Mengetahui</label>
-            <select name="mengetahui" id="mengetahui" style="width:100%; padding:0.5rem; margin-top:0.3rem; border:1px solid #ccc; border-radius:5px; font-size:1rem;" required>
+            <label>Mengetahui</label>
+            <select name="mengetahui" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;" required>
                 <option value="">-- Pilih --</option>
                 <option value="adum">ADUM</option>
                 <option value="timker_1">Timker 1</option>
@@ -36,88 +91,212 @@
 
         <div id="detail-items-container"></div>
 
-        <button type="button" onclick="tambahItem()" style="margin-bottom:1rem; padding:0.5rem 1rem;">+ Tambah Item</button>
-        <button type="submit" style="padding:0.5rem 1rem; background:#3490dc; color:white; border:none; border-radius:4px;">Simpan Pengajuan</button>
+        <button type="button" id="btnTambah" style="margin-bottom:1rem;padding:0.5rem 1rem;">+ Tambah Item</button>
+        <button type="submit" style="padding:0.5rem 1rem;background:#3490dc;color:white;border:none;border-radius:4px;">Simpan Pengajuan</button>
     </form>
 </div>
 
 <script>
+window.kroAll = @json($kroAll); // nested KRO dari controller
 let itemCount = 0;
 
-// Ambil data KRO dari PHP
-let kroAccounts = @json($kroAccounts);
+document.getElementById('btnTambah').addEventListener('click', tambahItem);
 
 function tambahItem() {
+    const idx = itemCount++;
     const container = document.getElementById('detail-items-container');
-    const div = document.createElement('div');
-    div.style.border = '1px solid #ccc';
-    div.style.padding = '1rem';
-    div.style.marginBottom = '1rem';
-    div.style.borderRadius = '5px';
-    div.id = `item-${itemCount}`;
+    const wrapper = document.createElement('div');
+    wrapper.id = `item-${idx}`;
+    wrapper.style = "border:1px solid #ccc;padding:1rem;margin-bottom:1rem;border-radius:5px;";
 
-    // Opsi dropdown KRO
-    let options = `<option value="">-- Pilih KRO/Kode Akun --</option>`;
-    kroAccounts.forEach(kro => {
-        options += `<option value="${kro.value}">${kro.value}</option>`;
-    });
-
-    div.innerHTML = `
-        <h4>Item Pembelian #${itemCount+1}</h4>
-
+    wrapper.innerHTML = `
+        <h4>Item #${idx + 1}</h4>
         <label>Nama Barang</label>
-        <input type="text" name="items[${itemCount}][nama_barang]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+        <input type="text" name="items[${idx}][nama_barang]" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;" required>
 
-        <label>KRO/Kode Akun</label>
-        <select name="items[${itemCount}][kro]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
-            ${options}
-        </select>
+        <div class="form-group kro-dropdown-wrapper" id="kro-wrapper-${idx}">
+            <label for="kro-${idx}">KRO / Kode Akun</label>
+            <input type="text" name="items[${idx}][kro]" id="kro-trigger-${idx}" class="kro-input" readonly placeholder="Pilih KRO →">
+            <input type="hidden" name="items[${idx}][kode_kro]" id="kode_kro-${idx}">
+            <div class="kro-menu" id="kro-menu-${idx}"></div>
+        </div>
 
         <label>Volume</label>
-        <input type="number" class="volume" name="items[${itemCount}][volume]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+        <input type="number" name="items[${idx}][volume]" id="vol-${idx}" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;" required>
 
         <label>Harga Satuan</label>
-        <input type="number" class="harga_satuan" name="items[${itemCount}][harga_satuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+        <input type="number" name="items[${idx}][harga_satuan]" id="hrg-${idx}" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;" required>
 
         <label>Ongkos Kirim</label>
-        <input type="number" class="ongkos_kirim" name="items[${itemCount}][ongkos_kirim]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" required>
+        <input type="number" name="items[${idx}][ongkos_kirim]" id="ong-${idx}" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;" required>
 
         <label>Total Dana</label>
-        <input type="number" class="jumlah_dana_pengajuan" name="items[${itemCount}][jumlah_dana_pengajuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" readonly required>
+        <input type="number" name="items[${idx}][jumlah_dana_pengajuan]" id="tot-${idx}" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;" readonly required>
 
-        <label>Foto/Ket</label>
-        <input type="file" class="foto" name="items[${itemCount}][foto]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;">
+        <label>Foto/Keterangan</label>
+        <input type="file" name="items[${idx}][foto]" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;">
 
         <label>Link</label>
-        <input type="url" class="link" name="items[${itemCount}][link]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" placeholder="https://example.com">
+        <input type="url" name="items[${idx}][link]" placeholder="https://example.com" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;">
 
-        <button type="button" onclick="hapusItem(${itemCount})" style="background:#ff5c5c; color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px;">Hapus Item</button>
+        <button type="button" onclick="hapusItem(${idx})" style="background:#ff5c5c;color:white;border:none;padding:0.4rem 0.8rem;border-radius:4px;">Hapus</button>
     `;
+    container.appendChild(wrapper);
 
-    container.appendChild(div);
+    // Hitung Total Dana
+    const vol = document.getElementById(`vol-${idx}`);
+    const hrg = document.getElementById(`hrg-${idx}`);
+    const ong = document.getElementById(`ong-${idx}`);
+    const tot = document.getElementById(`tot-${idx}`);
+    function hitung() {
+        const v = parseFloat(vol.value||0);
+        const h = parseFloat(hrg.value||0);
+        const o = parseFloat(ong.value||0);
+        tot.value = (v*h)+o;
+    }
+    vol.addEventListener('input', hitung);
+    hrg.addEventListener('input', hitung);
+    ong.addEventListener('input', hitung);
 
-    // Total otomatis
-    const volume = div.querySelector('.volume');
-    const harga = div.querySelector('.harga_satuan');
-    const ongkir = div.querySelector('.ongkos_kirim');
-    const total = div.querySelector('.jumlah_dana_pengajuan');
+    // Buat KRO dropdown cascading
+    initKroDropdown(idx);
 
-    function updateTotal() {
-        const v = parseFloat(volume.value) || 0;
-        const h = parseFloat(harga.value) || 0;
-        const o = parseFloat(ongkir.value) || 0;
-        total.value = (v * h) + o;
+}
+
+function hapusItem(id) {
+    const el = document.getElementById(`item-${id}`);
+    if(el) el.remove();
+}
+
+function initKroDropdown(idx) {
+    const wrapper = document.getElementById(`kro-wrapper-${idx}`);
+    const trigger = document.getElementById(`kro-trigger-${idx}`);
+    const menu = document.getElementById(`kro-menu-${idx}`);
+    const hiddenInput = document.getElementById(`kode_kro-${idx}`);
+
+    // toggle dropdown
+    trigger.addEventListener("click", function () {
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
+    });
+
+    // klik di luar → tutup dropdown
+    document.addEventListener("click", function(e) {
+        if (!wrapper.contains(e.target)) {
+            menu.style.display = "none";
+        }
+    });
+
+    // generate tree
+    menu.innerHTML = "";
+    const treeRoot = document.createElement("div");
+    treeRoot.classList.add("tree-root");
+    menu.appendChild(treeRoot);
+
+    buildTreeNodes(window.kroAll, treeRoot, function(selected) {
+        trigger.value = selected;
+        hiddenInput.value = selected;
+        menu.style.display = "none";
+    });
+}
+
+// ------- SHOW / HIDE DROPDOWN -------
+document.addEventListener("click", function (e) {
+    const wrapper = document.getElementById("kro-wrapper");
+    const trigger = wrapper.querySelector(".kro-trigger");
+    const menu = wrapper.querySelector(".kro-menu");
+
+    // klik input → buka / tutup menu
+    if (trigger.contains(e.target)) {
+        menu.style.display = menu.style.display === "block" ? "none" : "block";
+        return;
     }
 
-    volume.addEventListener('input', updateTotal);
-    harga.addEventListener('input', updateTotal);
-    ongkir.addEventListener('input', updateTotal);
+    // klik luar → tutup menu
+    if (!wrapper.contains(e.target)) {
+        menu.style.display = "none";
+    }
+});
 
-    itemCount++;
+// ------- GENERATE TREEVIEW -------
+function createKroDropdown() {
+    const menu = document.querySelector("#kro-wrapper .kro-menu");
+    menu.innerHTML = "";
+
+    const treeRoot = document.createElement("div");
+    treeRoot.classList.add("tree-root");
+
+    buildTreeNodes(window.kroAll, treeRoot);
+
+    menu.appendChild(treeRoot);
 }
 
-function hapusItem(id){
-    document.getElementById(`item-${id}`).remove();
+// ------- BUILD TREE NODES -------
+function buildTreeNodes(data, parentEl, onSelect, path = []) {
+    data.forEach(item => {
+
+        const currentLabel = item.kode_akun ?? item.kode;
+        const newPath = [...path, currentLabel];
+
+        const row = document.createElement('div');
+        row.style.marginLeft = "10px";
+
+        const toggle = document.createElement('span');
+        toggle.textContent = item.children?.length ? "▸" : "";
+        toggle.style.cursor = "pointer";
+        toggle.style.marginRight = "4px";
+
+        const label = document.createElement('span');
+        label.textContent = currentLabel;
+        label.style.cursor = "pointer";
+
+        row.appendChild(toggle);
+        row.appendChild(label);
+        parentEl.appendChild(row);
+
+        let childBox = null;
+        if (item.children?.length) {
+            childBox = document.createElement("div");
+            childBox.style.display = "none";
+            childBox.style.marginLeft = "20px";
+            parentEl.appendChild(childBox);
+
+            buildTreeNodes(item.children, childBox, onSelect, newPath);
+        }
+
+        toggle.addEventListener("click", () => {
+            if (!childBox) return;
+            childBox.style.display = childBox.style.display === "block" ? "none" : "block";
+            toggle.textContent = childBox.style.display === "block" ? "▾" : "▸";
+        });
+
+        // KLIK LABEL → SEND VALUE MULAI LEVEL 3
+        label.addEventListener("click", () => {
+
+    // hitung level berdasar panjang path
+    const level = newPath.length;
+
+    // LEVEL 1 & 2 → TIDAK BOLEH PILIH, cuma buka anak
+    if (level <= 2) {
+        if (childBox) {
+            childBox.style.display = "block";
+            toggle.textContent = "▾";
+        }
+        return; // <-- stop di sini
+    }
+
+        // LEVEL 3+ → BOLEH PILIH (ISI INPUT)
+        let finalPath = newPath.slice(2); // mulai dari level 3
+        const finalVal = finalPath.join('.');
+
+        onSelect(finalVal);
+    });
+
+    });
 }
+
+
+
+// ------- LOAD TREEVIEW -------
+document.addEventListener("DOMContentLoaded", createKroDropdown);
 </script>
 @endsection

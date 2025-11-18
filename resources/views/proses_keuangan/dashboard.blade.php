@@ -149,11 +149,11 @@
 
             {{-- === ACTION BUTTONS === --}}
             <div style="margin-top:15px; display:flex; gap:10px;">
-                <a href="{{ route('proses.approve', $pengajuan->id) }}" 
+                <a href="{{ route('proses.approve', $group->id) }}" 
                     onclick="return confirm('Yakin ingin approve pengajuan ini?')" 
                     style="padding:0.5rem 1rem; background-color:#28a745; color:white; border-radius:5px; text-decoration:none;">Approve</a>
 
-                <a href="{{ route('proses.reject', $pengajuan->id) }}" 
+                <a href="{{ route('proses.reject', $group->id) }}" 
                     onclick="return confirm('Yakin ingin reject pengajuan ini?')" 
                     style="padding:0.5rem 1rem; background-color:#dc3545; color:white; border-radius:5px; text-decoration:none;">Reject</a>
             </div>

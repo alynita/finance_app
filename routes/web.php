@@ -13,14 +13,20 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PpkController;
 use App\Http\Controllers\HonorController;
 use App\Http\Controllers\KroController;
+use App\Http\Controllers\Auth\LoginController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+Route::post('login', [LoginController::class, 'login']);
+Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+
+
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 //**Admin */
 Route::middleware(['auth'])->prefix('admin')->group(function () {
@@ -34,7 +40,7 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
     Route::get('/kro/{id}/edit', [KroController::class, 'edit'])->name('admin.kro.edit');
     Route::post('/kro/store', [KroController::class, 'store'])->name('admin.kro.store');
     Route::put('/kro/{id}/update', [KroController::class, 'update'])->name('admin.kro.update');
-    Route::delete('/kro/{id}/delete', [KroController::class, 'destroy'])->name('admin.kro.delete');
+    Route::delete('admin/kro/{id}', [KroController::class, 'destroy'])->name('admin.kro.destroy');
 });
 
 //**Pegawai */
@@ -47,7 +53,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // Dropdown form pengajuan
-Route::get('/get-kode-akun', [DropdownController::class, 'getKodeAkun'])->name('get.kode.akun');
+Route::get('/kro/children/{id}', [KroController::class, 'getChildren']);
 
 // CRUD admin KRO & Kode Akun
 Route::prefix('admin')->group(function() {
@@ -101,20 +107,24 @@ Route::middleware(['auth'])->group(function() {
         Route::get('/pengajuan', [ApproveController::class, 'pengajuan'])->name('pengajuan');
         Route::post('/approve/{id}', [ApproveController::class, 'approve'])->name('approve');
         Route::post('/reject/{id}', [ApproveController::class, 'reject'])->name('reject');
+        // Route untuk menampilkan daftar pengajuan berdasarkan kategori
+        Route::get('/pengajuan/kategori/{kategori}', [ApproveController::class, 'pengajuanKategori'])
+            ->name('pengajuan.kategori');
+
     });
 });
 
 // PPK
 Route::prefix('ppk')->name('ppk.')->group(function() {
     Route::get('/dashboard', [PpkController::class, 'dashboard'])->name('dashboard');
-    // Route draf / approve PPK
+    Route::post('/update-kro/{id}', [PpkController::class, 'updateKRO'])->name('ppk.updateKRO');
     Route::get('/approve', [PpkController::class, 'approvedList'])->name('approve');
-    // Route untuk lihat detail PPK per id
     Route::get('/{id}', [PpkController::class, 'show'])->name('show');
-    // Simpan grup / approve langsung
     Route::post('/{id}/store-group', [PpkController::class, 'storeGroup'])->name('storeGroup');
     Route::post('/group/{id}/approve', [PpkController::class, 'approveGroup'])->name('approveGroup');
     Route::post('/ppk/{id}/approve-semua', [PpkController::class, 'approveAll'])->name('approveAll');
+    Route::get('/pengajuan/kategori/{kategori}', [ApproveController::class, 'pengajuanKategori'])
+        ->name('pengajuan.kategori');
 });
 
 // Laporan untuk Adum
@@ -132,22 +142,23 @@ Route::prefix('keuangan')->group(function() {
     Route::get('/keuangan/laporan', [KeuanganController::class, 'laporan'])->name('keuangan.laporan');
     Route::get('/keuangan/laporan/{id}', [KeuanganController::class, 'laporan_detail'])->name('keuangan.laporan_detail');
     // KEUANGAN - Pengajuan Honor
-    // Form input honor
     Route::get('/honor/input', [KeuanganController::class, 'honorForm'])->name('keuangan.honor.form');
     Route::post('/honor/store', [KeuanganController::class, 'storeHonor'])->name('keuangan.honor.store');
-
-    // List semua honor
     Route::get('/honor/data', [KeuanganController::class, 'honorData'])->name('keuangan.honor.data');
-
-    // Detail honor per ID
     Route::get('/honor/detail/{id}', [KeuanganController::class, 'honorDetail'])->name('keuangan.honor.detail');
+    Route::get('/honor/{id}/laporan', [HonorController::class, 'laporan'])->name('honor.laporan');
+    Route::post('/honor/{id}/simpan-arsip', [HonorController::class, 'simpanArsip'])->name('honor.simpanArsip');
 });
 
 //Bendahara
 Route::prefix('bendahara')->group(function() {
     Route::get('/dashboard', [BendaharaController::class, 'dashboard'])->name('bendahara.dashboard');
     Route::get('/laporan/{id}', [BendaharaController::class, 'show'])->name('bendahara.laporan.show');
-    Route::post('/laporan/{id}/arsip', [BendaharaController::class, 'simpanArsip'])->name('bendahara.simpan-arsip');
+    Route::get('/bendahara/honor/{id}', [BendaharaController::class, 'showHonor'])->name('bendahara.honor.show');
+    Route::post('/bendahara/arsip/pengadaan/{id}', [BendaharaController::class, 'simpanArsipPengadaan'])
+        ->name('bendahara.arsip.pengadaan');
+    Route::post('/bendahara/arsip/honor/{id}', [BendaharaController::class, 'simpanArsipHonor'])
+        ->name('bendahara.arsip.honor');
     Route::get('/laporan/{id}/download', [BendaharaController::class, 'downloadPDF'])->name('bendahara.download-pdf');
     Route::get('/arsip', [BendaharaController::class, 'arsip'])->name('bendahara.arsip');
 });

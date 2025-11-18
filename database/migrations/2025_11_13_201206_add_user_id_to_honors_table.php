@@ -9,10 +9,10 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::table('honorarium', function (Blueprint $table) {
-            if (!Schema::hasColumn('honorarium', 'uraian')) $table->string('uraian')->nullable();
+        Schema::table('honors', function (Blueprint $table) {
+            $table->unsignedBigInteger('user_id')->nullable()->after('ppk_approved_at');
         });
     }
 
@@ -21,8 +21,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('honorarium', function (Blueprint $table) {
-            //
+        Schema::table('honors', function (Blueprint $table) {
+            $table->dropColumn('user_id');
         });
     }
+
 };

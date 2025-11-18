@@ -3,63 +3,63 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\KroAccount;
+use App\Models\Kro;
 
 class KroController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = KroAccount::query();
-
-        if ($request->has('search')) {
-            $query->where('value', 'like', '%'.$request->search.'%')
-                ->orWhere('kro', 'like', '%'.$request->search.'%')
-                ->orWhere('kode_akun', 'like', '%'.$request->search.'%');
-        }
-
-        $kros = $query->get();
-
-        return view('admin.kro.index', compact('kros'));
+        $kro = Kro::all();
+        return view('admin.kro.index', compact('kro'));
     }
 
-    //Tambah KRO
+    public function create()
+    {
+        return view('admin.kro.create');
+    }
+
     public function store(Request $request)
     {
         $request->validate([
-            'value' => 'required|string|unique:kro_accounts,value',
+            'kode' => 'nullable|string|max:255',
+            'kode_akun' => 'nullable|string|max:255|unique:kros,kode_akun,' . $kro->id,
         ]);
 
-        KroAccount::create([
-            'value' => $request->value,
-            'kro' => null, // optional, bisa diisi nanti
-            'kode_akun' => null, // optional, bisa diisi nanti
-        ]);
-
-        return redirect()->back()->with('success', 'KRO berhasil ditambahkan!');
+        Kro::create($request->all());
+        return redirect()->route('admin.kro.index')->with('success', 'KRO berhasil ditambahkan.');
     }
 
     public function edit($id)
     {
-        $kro = KroAccount::findOrFail($id);
-        return view('admin.kro.edit', compact('kro'));
+        $kro = Kro::findOrFail($id);
+        return view('admin.kro.index', compact('kro'));
     }
 
     public function update(Request $request, $id)
     {
+        $kro = Kro::findOrFail($id);
+
         $request->validate([
-            'value' => 'required|string|unique:kro_accounts,value,' . $id,
+            'kode' => 'nullable|string|max:255',
+            'kode_akun' => 'nullable|string|max:255|unique:kros,kode_akun,' . $kro->id,
         ]);
 
-        $kro = KroAccount::findOrFail($id);
-        $kro->value = $request->value;
+        if ($request->filled('kode')) {
+            $kro->kode = $request->kode;
+        }
+
+        if ($request->filled('kode_akun')) {
+            $kro->kode_akun = $request->kode_akun;
+        }
+
         $kro->save();
 
-        return redirect()->back()->with('success', 'KRO berhasil diperbarui!');
+        return response()->json(['success' => true, 'message' => 'KRO berhasil diperbarui']);
     }
 
     public function destroy($id)
     {
-        KroAccount::destroy($id);
-        return back()->with('success', 'Data KRO berhasil dihapus.');
+        Kro::findOrFail($id)->delete();
+        return redirect()->route('admin.kro.index')->with('success', 'KRO berhasil dihapus.');
     }
 }

@@ -9,26 +9,39 @@ use Carbon\Carbon;
 
 class HonorController extends Controller
 {
-    // Dashboard approval berdasarkan role
+    // DASHBOARD ROLE
     public function dashboard()
     {
         $user = auth()->user();
 
-        if ($user->role === 'adum') {
-            // ADUM lihat honor yang masih pending
-            $honors = Honor::where('status', 'pending')->get();
-        } elseif ($user->role === 'ppk') {
-            // PPK lihat honor yang sudah diapprove ADUM
-            $honors = Honor::where('status', 'adum_approved')->get();
-        } else {
-            // Role lain kosong
-            $honors = collect();
+        switch ($user->role) {
+            case 'adum':
+                // ADUM lihat honor pending
+                $honors = Honor::where('status', 'pending')->get();
+                break;
+
+            case 'ppk':
+                // PPK lihat honor yang sudah disetujui ADUM
+                $honors = Honor::where('status', 'adum_approved')->get();
+                break;
+
+            case 'bendahara':
+            case 'verifikator':
+                // Bendahara & Verifikator lihat honor yang sudah disetujui ADUM
+                // dan belum diarsipkan
+                $honors = Honor::where('status', 'adum_approved')
+                    ->where('arsip', false)
+                    ->get();
+                break;
+
+            default:
+                $honors = collect();
         }
 
         return view('honor.dashboard', compact('honors', 'user'));
     }
 
-    // Approve honor
+    // APPROVE
     public function approve($id)
     {
         $honor = Honor::findOrFail($id);
@@ -59,7 +72,27 @@ class HonorController extends Controller
         return back()->with('success', 'Honor berhasil diapprove!');
     }
 
-    // Reject honor
+    // SIMPAN ARSIP (khusus Bendahara & Verifikator)
+    public function simpanArsip($id)
+    {
+        $honor = Honor::findOrFail($id);
+        $user = auth()->user();
+
+        if (!in_array($user->role, ['bendahara', 'verifikator'])) {
+            return back()->with('error', 'Hanya Bendahara dan Verifikator yang dapat mengarsipkan!');
+        }
+
+        if (!in_array($honor->status, ['adum_approved', 'ppk_approved'])) {
+            return back()->with('error', 'Honor belum bisa diarsipkan, tunggu proses approval!');
+        }
+
+        $honor->arsip = true;
+        $honor->save();
+
+        return back()->with('success', 'Honor berhasil disimpan ke arsip!');
+    }
+
+    // REJECT
     public function reject($id)
     {
         $honor = Honor::findOrFail($id);
@@ -69,7 +102,7 @@ class HonorController extends Controller
         return back()->with('success', 'Honor berhasil direject!');
     }
 
-    // Detail honor
+    // DETAIL
     public function detail($id)
     {
         $honor = Honor::findOrFail($id);

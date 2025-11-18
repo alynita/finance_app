@@ -7,6 +7,7 @@ use App\Models\PpkGroup;
 use App\Models\PengajuanItem;
 use Illuminate\Support\Facades\DB;
 use \App\Models\Honor;
+use \App\Models\KroAccount;
 
 class KeuanganController extends Controller
 {
@@ -24,7 +25,48 @@ class KeuanganController extends Controller
     public function showGroup($groupId)
     {
         $group = PpkGroup::with('pengajuan.user', 'items')->findOrFail($groupId);
-        return view('keuangan.showGroup', compact('group'));
+
+        // Ambil semua KRO dari DB
+        $kroData = DB::table('kro')->get();
+
+        // Buat nested array
+        $kroAll = $this->buildTree($kroData);
+
+        return view('keuangan.showGroup', compact('group', 'kroAll'));
+    }
+
+    // Update KRO per item
+    public function updateKro(Request $request, $itemId)
+    {
+        $request->validate([
+            'kro' => 'required|string|max:255',
+        ]);
+
+        DB::table('pengajuan_items')->where('id', $itemId)->update([
+            'kro' => $request->kro
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'KRO berhasil diupdate'
+        ]);
+    }
+
+    // Fungsi build tree (rekursif)
+    protected function buildTree($data, $parentId = null)
+    {
+        $branch = [];
+        foreach ($data as $item) {
+            if ($item->parent_id == $parentId) {
+                $children = $this->buildTree($data, $item->id);
+                $branch[] = [
+                    'kode' => $item->kode,
+                    'kode_akun' => $item->kode_akun,
+                    'children' => $children
+                ];
+            }
+        }
+        return $branch;
     }
 
     // Simpan proses pembayaran
@@ -85,50 +127,98 @@ class KeuanganController extends Controller
     // Form Input Honor
     public function honorForm()
     {
-        return view('keuangan.honor_input');
+         // Ambil semua KRO dari DB
+        $kroData = DB::table('kro')->get();
+
+        // Buat nested array
+        $kroAll = $this->buildTree($kroData);
+
+        return view('keuangan.honor_input', compact('kroAll'));
     }
 
-    // Simpan Honor
     public function storeHonor(Request $request)
     {
+        //dd($request->all());
+
         $request->validate([
             'nama_kegiatan' => 'required',
             'waktu' => 'required|date',
-            'alokasi_anggaran' => 'required|numeric',
-            'nama' => 'required',
-            'jabatan' => 'required',
-            'tujuan' => 'required',
-            'uang_harian' => 'required|numeric',
-            'pph21' => 'required',
-            'jumlah_dibayar' => 'required|numeric',
-            'nomor_rekening' => 'required',
-            'atas_nama' => 'required',
-            'bank' => 'required',
+            'alokasi_anggaran' => 'required',
+            'nama.*' => 'required',
+            'jabatan.*' => 'required',
+            'tujuan.*' => 'required',
+            'jenis_uang.*' => 'required', 
+            'jumlah_hari.*' => 'nullable|numeric',
+            'uang_harian.*' => 'nullable|numeric',
+            'uang_transport.*' => 'nullable|numeric',
+            'pph21.*' => 'required',
+            'potongan_lain.*' => 'nullable|numeric',
+            'nomor_rekening.*' => 'required',
+            'atas_nama.*' => 'required',
+            'bank.*' => 'required',
         ]);
 
-        // Hitung jumlah dibayar jika pph manual
-        $uangHarian = $request->uang_harian;
-        $pph21 = ($request->pph21 === 'manual') ? $request->pph21_manual : $request->pph21;
-        $potongan = $uangHarian * ($pph21 / 100);
-        $jumlahDibayar = $uangHarian - $potongan;
-
-        \App\Models\Honor::create([
+        // Header honor
+        $honor = \App\Models\Honor::create([
             'nama_kegiatan' => $request->nama_kegiatan,
             'waktu' => $request->waktu,
             'alokasi_anggaran' => $request->alokasi_anggaran,
-            'nama' => $request->nama,
-            'jabatan' => $request->jabatan,
-            'tujuan' => $request->tujuan,
-            'uang_harian' => $uangHarian,
-            'pph21' => $pph21,
-            'jumlah_dibayar' => $jumlahDibayar,
-            'nomor_rekening' => $request->nomor_rekening,
-            'atas_nama' => $request->atas_nama,
-            'bank' => $request->bank,
             'status' => 'pending',
+            'user_id' => auth()->id(),
         ]);
 
-        return redirect()->route('keuangan.honor.all')->with('success', 'Data honor berhasil ditambahkan!');
+        foreach ($request->nama as $index => $nama) {
+
+            $jenis = $request->jenis_uang[$index] ?? null;
+
+            // Default
+            $hari = (int) ($request->jumlah_hari[$index] ?? 1);
+            $uangHarian = (float) ($request->uang_harian[$index] ?? 0);
+            $uangTransport = (float) ($request->uang_transport[$index] ?? 0);
+
+            // Jika transport → jumlah hari otomatis 1
+            if ($jenis === 'transport') {
+                $hari = 1;
+            }
+
+            // Hitung total
+            if ($jenis === 'harian') {
+                $total = $uangHarian * $hari;
+            } elseif ($jenis === 'transport') {
+                $total = $uangTransport;
+            } else {
+                $total = 0;
+            }
+
+            // Potongan
+            $potongan = (float) ($request->potongan_lain[$index] ?? 100);
+            $totalSetelahPotongan = $total * ($potongan / 100);
+
+            // PPh21
+            $pph21 = (float) ($request->pph21[$index] ?? 0);
+            $pphNominal = $totalSetelahPotongan * ($pph21 / 100);
+
+            $jumlahDibayar = $totalSetelahPotongan - $pphNominal;
+
+            // Simpan detail
+            $honor->details()->create([
+                'nama' => $nama,
+                'jabatan' => $request->jabatan[$index],
+                'tujuan' => $request->tujuan[$index],
+                'jumlah_hari' => $hari,
+                'uang_harian' => $jenis === 'harian' ? $uangHarian : 0,
+                'uang_transport' => $jenis === 'transport' ? $uangTransport : 0,
+                'pph21' => $pph21,
+                'potongan_lain' => $potongan,
+                'jumlah_dibayar' => round($jumlahDibayar),
+                'nomor_rekening' => $request->nomor_rekening[$index],
+                'atas_nama' => $request->atas_nama[$index],
+                'bank' => $request->bank[$index],
+            ]);
+        }
+
+        return redirect()->route('keuangan.honor.data')
+            ->with('success', 'Data honor berhasil ditambahkan!');
     }
 
     // List semua honor
@@ -141,7 +231,9 @@ class KeuanganController extends Controller
     // Detail honor per ID
     public function honorDetail($id)
     {
-        $honor = \App\Models\Honor::findOrFail($id);
+        // Ambil data honor beserta semua detail-nya
+        $honor = \App\Models\Honor::with(['details', 'adum', 'ppk', 'user'])->findOrFail($id);
+
         return view('keuangan.honor_detail', compact('honor'));
     }
 

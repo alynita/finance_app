@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - Sistem Keuangan BBPK Jakarta</title>
+    <title>Registrasi - Sistem Pengajuan Barang BBPK Jakarta</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
         body {
             margin: 0;
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #0D1B2A, #1B263B);
+            background: linear-gradient(135deg, #E8F3F1, #C8E6E2);
             color: #333;
             display: flex;
             justify-content: center;
@@ -19,38 +19,47 @@
         }
 
         .register-container {
-            background: rgba(255, 255, 255, 0.9);
+            background: #fff;
             padding: 2.5rem;
             border-radius: 15px;
             width: 400px;
-            box-shadow: 0 4px 25px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 25px rgba(0,0,0,0.15);
             text-align: center;
         }
 
         .register-container img {
-            width: 70px;
+            width: 75px;
             margin-bottom: 1rem;
         }
 
         h2 {
-            margin-bottom: 1.5rem;
-            color: #0D1B2A;
+            margin-bottom: 1.2rem;
+            color: #004D47;
+            font-weight: 600;
         }
 
         input[type="text"],
         input[type="email"],
-        input[type="password"] {
+        input[type="password"],
+        input[name="nip"] {
             width: 100%;
             padding: 0.8rem;
             margin-bottom: 1rem;
             border: 1px solid #ccc;
             border-radius: 8px;
             font-size: 1rem;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border-color: #006C67;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0,108,103,0.3);
         }
 
         .btn-register {
             width: 100%;
-            background-color: #C19A6B;
+            background-color: #006C67;
             color: white;
             border: none;
             padding: 0.9rem;
@@ -62,7 +71,7 @@
         }
 
         .btn-register:hover {
-            background-color: #a57f55;
+            background-color: #004D47;
         }
 
         .links {
@@ -71,7 +80,7 @@
         }
 
         .links a {
-            color: #0D1B2A;
+            color: #006C67;
             text-decoration: none;
             font-weight: 500;
         }
@@ -91,12 +100,13 @@
 
     <div class="register-container">
         <img src="{{ asset('images/logo-bbpk.png') }}" alt="Logo BBPK">
-        <h2>Daftar Akun Baru</h2>
+        <h2>Daftar Akun Pengajuan Barang</h2>
 
         <form method="POST" action="{{ route('register') }}">
             @csrf
             <input type="text" name="name" placeholder="Nama Lengkap" required autofocus>
             <input type="email" name="email" placeholder="Email" required>
+            <input type="nip" name="nip" placeholder="NIP" required>
             <input type="password" name="password" placeholder="Password" required>
             <small style="display:block; text-align:left; color:#555; margin-top:-0.5rem; margin-bottom:1rem; font-size:0.85rem;">
                 Password minimal 8 karakter, mengandung huruf kecil dan angka.

@@ -7,14 +7,29 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <style>
-/* Basic reset */
-body { font-family: Arial, sans-serif; margin:0; padding:0; }
+/* === WARNA UTAMA KEMENKES === */
+:root {
+    --green-main: #009B4C;     /* Hijau khas Kemenkes */
+    --green-dark: #007B39;
+    --green-light: #00B262;
+    --white: #ffffff;
+    --gray-bg: #f5f7f5;
+    --gray-text: #333;
+}
+
+/* Reset dan font */
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--gray-bg);
+}
 
 /* Header */
 .header {
-    background: #3490dc;
-    color: white;
-    padding: 0.5rem 1rem;
+    background: var(--green-main);
+    color: var(--white);
+    padding: 0.7rem 1.2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -22,86 +37,127 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
     width: 100%;
     top: 0;
     z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     box-sizing: border-box;
 }
-.header-left { display:flex; align-items:center; gap:0.5rem; }
-.header-left h1 { margin:0; font-size:1.2rem; white-space:nowrap; }
+.header-left { display: flex; align-items: center; gap: 0.6rem; }
+.header-left h1 { margin: 0; font-size: 1.2rem; white-space: nowrap; font-weight: 600; }
 .header form button {
-    background: #ff5c5c; border:none; color:white; padding:0.5rem 1rem; border-radius:4px;
-    cursor:pointer; font-size:0.9rem; white-space:nowrap; min-width:80px;
+    background: var(--green-dark);
+    border: none;
+    color: var(--white);
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.3s ease;
 }
-.header form button:hover { background: #ff3b3b; }
+.header form button:hover {
+    background: #005f2c;
+}
 
 /* Sidebar */
 .sidebar {
-    background: #f1f1f1;
-    width: 200px;
+    background: var(--white);
+    width: 220px;
     height: 100vh;
     position: fixed;
-    top: 50px;
+    top: 60px;
     left: 0;
-    padding-top:1rem;
-    overflow-y:auto;
+    padding-top: 1rem;
+    overflow-y: auto;
     transition: width 0.3s ease, transform 0.3s ease;
-    border-right:1px solid rgba(0,0,0,0.1);
-    box-sizing:border-box;
+    border-right: 1px solid rgba(0,0,0,0.1);
+    box-sizing: border-box;
 }
-.sidebar.collapsed { width:60px; }
-.sidebar a { display:flex; align-items:center; padding:0.5rem 1rem; color:#333; text-decoration:none; margin-bottom:0.2rem; white-space:nowrap; }
-.sidebar a:hover { background:#ddd; }
-.sidebar.collapsed a span { display:none; }
+.sidebar.collapsed { width: 60px; }
+.sidebar a {
+    display: flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    color: var(--gray-text);
+    text-decoration: none;
+    margin-bottom: 0.2rem;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+}
+.sidebar a:hover {
+    background: var(--green-light);
+    color: var(--white);
+    border-left: 4px solid var(--green-dark);
+}
+.sidebar.collapsed a span { display: none; }
 
+/* Dropdown Menu */
 .dropdown {
     position: relative;
 }
-
 .dropdown-btn {
     background: none;
     border: none;
-    color: black;
+    color: var(--gray-text);
     cursor: pointer;
     width: 100%;
     text-align: left;
-    padding: 8px 16px;
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
 }
-
+.dropdown-btn:hover {
+    background-color: var(--green-light);
+    color: var(--white);
+}
 .dropdown-content {
     display: none;
     flex-direction: column;
-    background-color: #50C878;
-    margin-left: 10px;
+    background-color: var(--green-main);
 }
-
 .dropdown-content a {
     padding: 6px 20px;
-    color: #ddd;
+    color: var(--white);
     text-decoration: none;
+    transition: background 0.3s ease;
 }
-
 .dropdown-content a:hover {
-    color: #fff;
+    background-color: var(--green-dark);
 }
-
 .dropdown:hover .dropdown-content {
     display: flex;
 }
 
-
-/* Content */
+/* Konten */
 .content {
-    margin-left:200px;
-    padding:2rem;
-    padding-top:70px;
+    margin-left: 220px;
+    padding: 2rem;
+    padding-top: 80px;
     transition: margin-left 0.3s ease;
-    box-sizing:border-box;
+    box-sizing: border-box;
 }
-.sidebar.collapsed ~ .content { margin-left:60px; }
+.sidebar.collapsed ~ .content {
+    margin-left: 60px;
+}
+
+/* Tombol sidebar */
+.sidebar-toggle {
+    background: var(--white);
+    color: var(--green-main);
+    border: none;
+    font-size: 1.2rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+.sidebar-toggle:hover {
+    background: rgba(255,255,255,0.2);
+    color: var(--white);
+}
 
 /* Responsive */
-@media (max-width:768px){
-    .sidebar { transform:translateX(-100%); width:200px; }
-    .sidebar.active { transform:translateX(0); }
-    .content { margin-left:0; }
+@media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); width: 200px; }
+    .sidebar.active { transform: translateX(0); }
+    .content { margin-left: 0; }
 }
 </style>
 </head>
@@ -142,7 +198,7 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
         <a href="{{ route('pengadaan.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('pengadaan.arsip') }}"><span>Arsip</span></a>
 
-    @elseif(str_starts_with($user->role, 'timker_')) {{-- timker1–timker6 --}}
+    @elseif(str_starts_with($user->role, 'timker_'))
         <a href="{{ route($user->role . '.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route($user->role . '.pengajuan') }}"><span>Pengajuan</span></a>
 
@@ -154,25 +210,26 @@ body { font-family: Arial, sans-serif; margin:0; padding:0; }
 
     @elseif($user->role == 'ppk')
         <a href="{{ route('ppk.dashboard') }}"><span>Dashboard</span></a>
-        <a href="{{ route('ppk.approve') }}"><span>Draf</span></a>
         <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
         <a href="{{ route('honor.dashboard') }}"><span>Approval Honor</span></a>
+        <a href="{{ route('ppk.approve') }}"><span>Draf</span></a>
 
     @elseif($user->role == 'keuangan')
-    <a href="{{ route('keuangan.dashboard') }}"><span>Dashboard</span></a>
-    <a href="{{ route('keuangan.laporan') }}"><span>Laporan</span></a>
+        <a href="{{ route('keuangan.dashboard') }}"><span>Dashboard</span></a>
+        <a href="{{ route('keuangan.laporan') }}"><span>Laporan</span></a>
 
-    <!-- Dropdown untuk menu Honor -->
-    <div class="dropdown">
-        <button class="dropdown-btn"><span>Honor</span></button>
-        <div class="dropdown-content">
-            <a href="{{ route('keuangan.honor.form') }}">Pengajuan Honor</a>
-            <a href="{{ route('keuangan.honor.data') }}">Data Honor</a>
+        <!-- Dropdown Honor -->
+        <div class="dropdown">
+            <button class="dropdown-btn"><span>Honor</span></button>
+            <div class="dropdown-content">
+                <a href="{{ route('keuangan.honor.form') }}">Pengajuan Honor</a>
+                <a href="{{ route('keuangan.honor.data') }}">Data Honor</a>
+            </div>
         </div>
-    </div>
 
     @elseif($user->role == 'verifikator')
         <a href="{{ route('verifikator.dashboard') }}"><span>Dashboard</span></a>
+        <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
 
     @elseif($user->role == 'bendahara')
         <a href="{{ route('bendahara.dashboard') }}"><span>Dashboard</span></a>

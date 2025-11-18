@@ -22,8 +22,24 @@
 
         <div style="margin-bottom:25px;">
             <label style="font-weight:600; display:block; margin-bottom:6px;">Kode Akun</label>
-            <input type="text" name="kode_akun" value="{{ $group->kode_akun ?? '' }}" 
-                style="width:300px; padding:10px; border:1px solid #ccc; border-radius:6px;">
+            
+            <div class="kro-dropdown-wrapper" style="position:relative; display:inline-block;">
+                <input type="text" class="kro-input" readonly 
+                    value="{{ $group->items->pluck('kro')->first() }}" 
+                    placeholder="Pilih KRO →" style="width:250px; padding:10px; border:1px solid #ccc; border-radius:6px; background:#e9ecef;">
+                <input type="hidden" class="kro-hidden" name="kode_akun" value="{{ $group->items->pluck('kro')->first() }}">
+                <div class="kro-menu" style="display:none; position:absolute; background:#fff; border:1px solid #ccc; max-height:200px; overflow:auto; width:250px; z-index:1000;"></div>
+            </div>
+
+            <!-- Button Edit / Simpan -->
+            <button type="button" class="edit-kro-btn"
+                    style="margin-left:10px; padding:6px 12px; border:none; background:#007bff; color:white; border-radius:5px; cursor:pointer;">
+                ✏️ Edit
+            </button>
+            <button type="button" class="save-kro-btn"
+                    style="margin-left:10px; padding:6px 12px; border:none; background:#28a745; color:white; border-radius:5px; cursor:pointer; display:none;">
+                💾 Simpan
+            </button>
         </div>
 
         @foreach($group->items as $index => $item)
@@ -148,7 +164,7 @@ window.onload = function() {
     }
 
     function formatCurrency(value) {
-        return value.toLocaleString('id-ID', {minimumFractionDigits:0});
+        return Math.round(value).toLocaleString('id-ID', {minimumFractionDigits:0});
     }
 
     function updateTotals() {
@@ -157,8 +173,19 @@ window.onload = function() {
             const punyaNPWP = document.querySelector(`.npwp-check[data-index="${i}"]`)?.checked || false;
 
             // ==== PPN ====
-            const isPPN = document.querySelector(`.ppn-check[data-index="${i}"]`)?.checked;
-            const ppn = isPPN && jumlah >= 2000000 ? jumlah * 0.12 : 0;
+            // Ambil elemen checkbox PPN sesuai index baris
+            const ppnCheck = document.querySelector(`.ppn-check[data-index="${i}"]`);
+
+            // Otomatis centang jika jumlah >= 2 juta
+            if (jumlah >= 2000000) {
+                ppnCheck.checked = true;
+            } else {
+                ppnCheck.checked = false;
+            }
+
+            // Hitung nilai PPN jika checkbox aktif
+            const isPPN = ppnCheck.checked;
+            const ppn = isPPN ? (jumlah * 100 / 111) * 0.11 : 0;
 
             // ==== PPH 21 ====
             const sel = document.querySelector(`.pph21-select[data-index="${i}"]`);
@@ -168,16 +195,19 @@ window.onload = function() {
             }
             const pph21 = jumlah * pph21Rate;
 
-            // ==== PPH 22 ====
+            // ==== PPH22 ====
+            // Kalau checkbox PPH22 dicentang
             const isPPH22 = document.querySelector(`.pph22-check[data-index="${i}"]`)?.checked;
-            const pph22 = isPPH22 ? jumlah * (punyaNPWP ? 0.015 : 0.03) : 0;
+
+            // Hitung PPH22 dari jumlah dikurangi PPN
+            const pph22 = isPPH22 ? (jumlah - ppn) * (punyaNPWP ? 0.015 : 0.03) : 0;
 
             // ==== PPH 23 ====
             const isPPH23 = document.querySelector(`.pph23-check[data-index="${i}"]`)?.checked;
-            const pph23 = isPPH23 ? jumlah * (punyaNPWP ? 0.02 : 0.04) : 0;
+            const pph23 = isPPH23 ? (jumlah - ppn) * (punyaNPWP ? 0.02 : 0.04) : 0;
 
             // ==== TOTAL DIBAYARKAN ====
-            const dibayarkan = jumlah - (pph21 + pph22 + pph23);
+            const dibayarkan = (jumlah - ppn) - (pph21 + pph22 + pph23);
 
             // ==== UPDATE INPUT ====
             document.querySelector(`.hasil_pph21[data-index="${i}"]`).value = formatCurrency(pph21);
@@ -199,6 +229,110 @@ window.onload = function() {
 
     updateTotals();
 }
+
+const kroAllData = @json($kroAll);
+
+document.querySelectorAll('.kro-dropdown-wrapper').forEach(wrapper => {
+    const input = wrapper.querySelector('.kro-input');
+    const hiddenInput = wrapper.querySelector('.kro-hidden');
+    const menu = wrapper.querySelector('.kro-menu');
+    const editBtn = wrapper.nextElementSibling;
+    const saveBtn = editBtn.nextElementSibling;
+
+    // tombol edit → buka input
+    editBtn.addEventListener('click', () => {
+        input.removeAttribute('readonly');
+        menu.style.display = 'block';
+        editBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-block';
+    });
+
+    // tombol save → simpan
+    saveBtn.addEventListener('click', () => {
+        input.setAttribute('readonly', true);
+        menu.style.display = 'none';
+        editBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'none';
+
+        const itemId = {{ $group->items->pluck('id')->first() }};
+        fetch(`/keuangan/update-kro/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ kro: hiddenInput.value })
+        }).then(res=>res.json()).then(data=>{
+            if(data.success) console.log('✅ KRO updated');
+        });
+    });
+
+    // klik input → toggle menu
+    input.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.addEventListener('click', e => {
+        if(!wrapper.contains(e.target)) menu.style.display = 'none';
+    });
+
+    // build tree
+    function buildTreeNodes(data, parentEl, path = []) {
+        data.forEach(item => {
+            const currentLabel = item.kode_akun ?? item.kode ?? item.kro;
+            const newPath = [...path, currentLabel];
+            const row = document.createElement('div');
+            row.style.marginLeft = "10px";
+
+            const toggle = document.createElement('span');
+            toggle.textContent = item.children?.length ? "▸" : "";
+            toggle.style.cursor = "pointer";
+            toggle.style.marginRight = "4px";
+
+            const label = document.createElement('span');
+            label.textContent = currentLabel;
+            label.style.cursor = "pointer";
+
+            row.appendChild(toggle);
+            row.appendChild(label);
+            parentEl.appendChild(row);
+
+            let childBox = null;
+            if(item.children?.length) {
+                childBox = document.createElement("div");
+                childBox.style.display = "none";
+                childBox.style.marginLeft = "20px";
+                parentEl.appendChild(childBox);
+                buildTreeNodes(item.children, childBox, newPath);
+            }
+
+            toggle.addEventListener("click", () => {
+                if(!childBox) return;
+                childBox.style.display = childBox.style.display === "block" ? "none" : "block";
+                toggle.textContent = childBox.style.display === "block" ? "▾" : "▸";
+            });
+
+            label.addEventListener("click", () => {
+                if(newPath.length < 3){ 
+                    if(childBox) {
+                        childBox.style.display = "block";
+                        toggle.textContent = "▾";
+                    }
+                    return;
+                }
+                const finalVal = newPath.slice(2).join('/');
+                input.value = finalVal;
+                hiddenInput.value = finalVal;
+                menu.style.display = 'none';
+            });
+        });
+    }
+
+    menu.innerHTML = '';
+    buildTreeNodes(kroAllData, menu);
+});
+
 </script>
 
 @endsection

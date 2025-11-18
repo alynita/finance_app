@@ -55,7 +55,28 @@
                     @if($pengajuan->jenis_pengajuan === 'pembelian')
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->nama_barang ?? '-' }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->volume ?? 0), 2) }}</td>
-                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->kro ?? '-' }}</td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">
+                            @php
+                                // Ambil kro_full, hapus duplikasi jika ada
+                                $kroFull = $item->kro_full ?? $item->kro ?? '-';
+                                $parts = explode('.', $kroFull);
+                                $cleanParts = [];
+                                foreach($parts as $p){
+                                    if(!in_array($p, $cleanParts)){
+                                        $cleanParts[] = $p;
+                                    }
+                                }
+                                // Format terakhir → ganti titik sebelum kode akun akhir dengan slash
+                                if(count($cleanParts) > 2){
+                                    $last = array_pop($cleanParts); // kode akun terakhir
+                                    $secondLast = array_pop($cleanParts); // biasanya level terakhir sebelum A/524111
+                                    $kroDisplay = implode('.', $cleanParts) . '.' . $secondLast . '/' . $last;
+                                } else {
+                                    $kroDisplay = $kroFull;
+                                }
+                            @endphp
+                            {{ $kroDisplay }}
+                        </td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->harga_satuan ?? 0), 2) }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->jumlah_dana_pengajuan ?? 0), 2) }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">

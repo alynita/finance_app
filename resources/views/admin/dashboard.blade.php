@@ -19,18 +19,18 @@
     </div>
 
     <div class="stat-card">
-        <div class="icon">📄</div>
-        <div class="details">
-            <h4>Total Pengajuan</h4>
-            <p>{{ $totalPengajuan }}</p>
-        </div>
-    </div>
-
-    <div class="stat-card">
         <div class="icon">📊</div>
         <div class="details">
             <h4>Total KRO</h4>
             <p>{{ $totalKro }}</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="icon">📄</div>
+        <div class="details">
+            <h4>Total Pengajuan</h4>
+            <p>{{ $totalPengajuan }}</p>
         </div>
     </div>
 

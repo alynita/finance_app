@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
 use App\Models\PengajuanItem;
-use App\Models\KroAccount;
+use App\Models\Kro;
+use Illuminate\Support\Facades\DB;
 
 class PengajuanController extends Controller
 {
@@ -32,14 +33,59 @@ class PengajuanController extends Controller
     {
         $user = auth()->user();
 
+        // Jika role sarpras/bmn → form kerusakan
         if(in_array($user->role, ['sarpras','bmn'])){
             return view('pegawai.pengajuan.form_kerusakan');
         }
 
-        // Ambil semua KRO/Kode Akun untuk dropdown
-        $kroAccounts = KroAccount::all(); 
+        // Ambil semua KRO dari DB
+        $kroData = DB::table('kro')->get();
 
-        return view('pegawai.pengajuan.form_pembelian', compact('kroAccounts'));
+        // Buat nested array
+        $kroAll = $this->buildTree($kroData);
+
+        return view('pegawai.pengajuan.form_pembelian', compact('kroAll'));
+    }
+
+    private function buildTree($elements, $parentId = null) {
+        $branch = [];
+        foreach ($elements as $element) {
+            if ($element->parent_id == $parentId) {
+                $children = $this->buildTree($elements, $element->id);
+                if ($children) $element->children = $children;
+                $branch[] = $element;
+            }
+        }
+        return $branch;
+    }
+
+    /**
+     * Ambil semua level terakhir (A/B/C) beserta kode akun
+     */
+    private function getFinalOptions($elements, $parentId = null)
+    {
+        $options = [];
+
+        foreach ($elements as $el) {
+            if ($el->parent_id == $parentId) {
+                // cek apakah ini punya kode_akun → level terakhir
+                if ($el->kode_akun) {
+                    $options[] = [
+                        'id' => $el->id,
+                        'label' => $el->nama . ' (' . $el->kode_akun . ')',
+                        'kode_akun' => $el->kode_akun
+                    ];
+                } else {
+                    // rekursif ke anaknya
+                    $childOptions = $this->getFinalOptions($elements, $el->id);
+                    if ($childOptions) {
+                        $options = array_merge($options, $childOptions);
+                    }
+                }
+            }
+        }
+
+        return $options;
     }
 
     public function store(Request $request)
@@ -104,9 +150,10 @@ class PengajuanController extends Controller
                 $jumlah_dana = ($item['volume'] ?? 0) * ($item['harga_satuan'] ?? 0);
             } elseif ($request->jenis_pengajuan === 'pembelian') {
                 $dataItem['nama_barang'] = $item['nama_barang'] ?? null;
-                $dataItem['kro'] = $item['kro'] ?? null;
+                $dataItem['kro'] = implode('.', array_unique(explode('.', $item['kro'] ?? '')));
                 $dataItem['ongkos_kirim'] = $item['ongkos_kirim'] ?? 0;
                 $dataItem['tipe_item'] = 'pembelian';
+                $dataItem['link'] = $item['link'] ?? null;
                 $jumlah_dana = ($item['volume'] ?? 0) * ($item['harga_satuan'] ?? 0) + ($item['ongkos_kirim'] ?? 0);
             }
 
@@ -159,6 +206,16 @@ class PengajuanController extends Controller
     {
         $pengajuan = Pengajuan::with(['items', 'user', 'mengetahui', 'adum', 'ppk'])
                     ->findOrFail($id);
+
+        // Buat kro_full per item
+        foreach ($pengajuan->items as $item) {
+            // Cek dulu kalau kro ada isinya
+            if ($item->kro) {
+                $item->kro_full = $item->kro;
+            } else {
+                $item->kro_full = '-';
+            }
+        }
 
         return view('pegawai.pengajuan.show', compact('pengajuan'));
     }

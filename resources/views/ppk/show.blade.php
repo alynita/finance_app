@@ -30,7 +30,7 @@
             </thead>
             <tbody>
                 @foreach($pengajuan->items as $index => $item)
-                <tr>
+                <tr data-item-id="{{ $item->id }}">
                     <td>{{ $index+1 }}</td>
                     <td>{{ $item->nama_barang }}</td>
                     <td>{{ $item->volume }}</td>
@@ -44,34 +44,42 @@
             </tbody>
         </table>
     @elseif($pengajuan->jenis_pengajuan === 'pembelian')
-        <table border="1" cellpadding="6" style="width:100%; border-collapse:collapse;">
-            <thead style="background:#f3f3f3;">
-                <tr>
-                    <th>No</th>
-                    <th>Nama Barang</th>
-                    <th>Volume</th>
-                    <th>KRO / Kode Akun</th>
-                    <th>Harga Satuan</th>
-                    <th>Ongkos Kirim</th>
-                    <th>Jumlah Dana</th>
-                    <th>Link</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($pengajuan->items as $index => $item)
-                <tr>
-                    <td>{{ $index+1 }}</td>
-                    <td>{{ $item->nama_barang }}</td>
-                    <td>{{ $item->volume }}</td>
-                    <td>{{ $item->kro ?? '-' }}</td>
-                    <td>{{ number_format($item->harga_satuan,0,',','.') }}</td>
-                    <td>{{ number_format($item->ongkos_kirim,0,',','.') }}</td>
-                    <td>{{ number_format($item->jumlah_dana_pengajuan,0,',','.') }}</td>
-                    <td>@if($item->link) <a href="{{ $item->link }}" target="_blank">Lihat</a> @else - @endif</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <table border="1" cellpadding="6" style="width:100%; border-collapse:collapse;">
+        <thead style="background:#f3f3f3;">
+            <tr>
+                <th>No</th>
+                <th>Nama Barang</th>
+                <th>Volume</th>
+                <th>KRO / Kode Akun</th>
+                <th>Harga Satuan</th>
+                <th>Ongkos Kirim</th>
+                <th>Jumlah Dana</th>
+                <th>Link</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($pengajuan->items as $index => $item)
+            <tr data-item-id="{{ $item->id }}">
+                <td>{{ $index+1 }}</td>
+                <td>{{ $item->nama_barang }}</td>
+                <td>{{ $item->volume }}</td>
+                <td>
+                    <div class="kro-dropdown-wrapper" style="position:relative;">
+                        <input type="text" class="kro-input" readonly value="{{ $item->kro ?? '' }}" placeholder="Pilih KRO →">
+                        <input type="hidden" class="kro-hidden" value="{{ $item->kro ?? '' }}">
+                        <div class="kro-menu" style="display:none; position:absolute; background:#fff; border:1px solid #ccc; max-height:200px; overflow:auto;"></div>
+                    </div>
+                    <button type="button" class="edit-kro-btn">Edit</button>
+                    <button type="button" class="save-kro-btn" style="display:none;">Simpan</button>
+                </td>
+                <td>{{ number_format($item->harga_satuan,0,',','.') }}</td>
+                <td>{{ number_format($item->ongkos_kirim,0,',','.') }}</td>
+                <td>{{ number_format($item->jumlah_dana_pengajuan,0,',','.') }}</td>
+                <td>@if($item->link) <a href="{{ $item->link }}" target="_blank">Lihat</a> @else - @endif</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
     @endif
 
     <hr>
@@ -170,7 +178,6 @@ document.getElementById('show-group-form').addEventListener('click', function(){
     document.getElementById('group-form').style.display = 'block';
 });
 
-// fungsi buat render grup baru
 function renderGroup(){
     const container = document.getElementById('groups-container');
     const groupDiv = document.createElement('div');
@@ -218,7 +225,6 @@ function renderGroup(){
     groupDiv.innerHTML = html;
     container.appendChild(groupDiv);
 
-    // tambah event listener untuk checkbox
     groupDiv.querySelectorAll('.item-checkbox').forEach(cb=>{
         cb.addEventListener('change', function(){
             updateSelectedItems();
@@ -238,5 +244,114 @@ function updateSelectedItems(){
 document.getElementById('add-group').addEventListener('click', function(){
     renderGroup();
 });
+
+// 🔹 Edit KRO per item
+const kroAllData = @json($kroAll);
+
+document.querySelectorAll('.kro-dropdown-wrapper').forEach(wrapper => {
+    const input = wrapper.querySelector('.kro-input');
+    const hiddenInput = wrapper.querySelector('.kro-hidden');
+    const menu = wrapper.querySelector('.kro-menu');
+    const editBtn = wrapper.nextElementSibling; // tombol Edit
+    const saveBtn = wrapper.nextElementSibling.nextElementSibling; // tombol Simpan
+
+    // tombol Edit
+    editBtn.addEventListener('click', () => {
+        input.readOnly = false;      // bisa klik input
+        menu.style.display = 'block'; // tampilkan menu
+        editBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-block';
+    });
+
+    // klik di luar → tutup dropdown
+    document.addEventListener('click', function(e) {
+        if(!wrapper.contains(e.target) && !editBtn.contains(e.target)) menu.style.display = 'none';
+    });
+
+    // build tree KRO
+    function buildTreeNodes(data, parentEl, onSelect, path = []) {
+        data.forEach(item => {
+            const currentLabel = item.kode_akun ?? item.kode;
+            const newPath = [...path, currentLabel];
+
+            const row = document.createElement('div');
+            row.style.marginLeft = "10px";
+
+            const toggle = document.createElement('span');
+            toggle.textContent = item.children?.length ? "▸" : "";
+            toggle.style.cursor = "pointer";
+            toggle.style.marginRight = "4px";
+
+            const label = document.createElement('span');
+            label.textContent = currentLabel;
+            label.style.cursor = "pointer";
+
+            row.appendChild(toggle);
+            row.appendChild(label);
+            parentEl.appendChild(row);
+
+            let childBox = null;
+            if(item.children?.length) {
+                childBox = document.createElement("div");
+                childBox.style.display = "none";
+                childBox.style.marginLeft = "20px";
+                parentEl.appendChild(childBox);
+
+                buildTreeNodes(item.children, childBox, onSelect, newPath);
+            }
+
+            toggle.addEventListener("click", () => {
+                if(!childBox) return;
+                childBox.style.display = childBox.style.display === "block" ? "none" : "block";
+                toggle.textContent = childBox.style.display === "block" ? "▾" : "▸";
+            });
+
+            label.addEventListener("click", () => {
+                if(newPath.length < 3){
+                    if(childBox) {
+                        childBox.style.display = "block";
+                        toggle.textContent = "▾";
+                    }
+                    return;
+                }
+                const finalVal = newPath.slice(2).join('/');
+                input.value = finalVal;
+                hiddenInput.value = finalVal;
+                menu.style.display = 'none';
+            });
+        });
+    }
+
+    buildTreeNodes(kroAllData, menu, (val) => {
+        input.value = val;
+        hiddenInput.value = val;
+    });
+
+    // tombol Simpan
+    saveBtn.addEventListener('click', () => {
+        input.readOnly = true;
+        editBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'none';
+
+        const itemId = wrapper.closest('tr').dataset.itemId;
+        const newValue = hiddenInput.value;
+
+        fetch(`/ppk/update-kro/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ kro: newValue })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) console.log('✅ ' + data.message);
+            else console.error('❌ Gagal update KRO');
+        })
+        .catch(err => console.error('Fetch error:', err));
+    });
+});
+
 </script>
 @endsection

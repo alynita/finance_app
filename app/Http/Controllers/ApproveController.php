@@ -14,30 +14,63 @@ class ApproveController extends Controller
     {
         $user = auth()->user();
 
-        // Cek role timker dinamis (timker1 - timker6)
+        // Default
+        $totalPending = $totalApproved = $totalRejected = 0;
+        $pendingPembelian = $pendingProsesKeuangan = $pendingHonor = 0;
+
+        // Ambil pengajuan sesuai role
         if (str_starts_with($user->role, 'timker_')) {
             $pengajuans = Pengajuan::with('items', 'user', 'mengetahui')
                 ->where('status', 'pending_' . $user->role)
                 ->get();
 
-        // Role adum
         } elseif ($user->role === 'adum') {
             $pengajuans = Pengajuan::with('items', 'user')
                 ->where('status', 'pending_adum')
                 ->get();
 
-        // Role ppk
+            // Total pending / approved / rejected
+            $totalPending = $pengajuans->count();
+            $totalApproved = Pengajuan::where('status', 'pending_ppk')->count(); // setelah ADUM approve
+            $totalRejected = Pengajuan::where('status', 'rejected_adum')->count();
+
+            // Per kategori (ambil dari DB supaya Proses Keuangan juga muncul)
+            $pendingPembelian = Pengajuan::whereIn('jenis_pengajuan', ['pembelian', 'kerusakan'])
+                ->whereIn('status', ['pending_adum', 'pending_ppk'])
+                ->count();
+
+            $pendingProsesKeuangan = Pengajuan::where('status', 'pending_ppk')
+                ->count();
+
+            $pendingHonor = Pengajuan::where('jenis_pengajuan', 'honor')
+                ->whereIn('status', ['pending_adum', 'pending_ppk'])
+                ->count();
+
         } elseif ($user->role === 'ppk') {
             $pengajuans = Pengajuan::with('items', 'user')
                 ->where('status', 'pending_ppk')
                 ->get();
 
-        // Kalau bukan salah satu role di atas
+            // Total pengajuan untuk card
+            $totalPending = $pengajuans->count();
+            $totalApproved = Pengajuan::where('status', 'pending_pengadaan')->count(); // setelah PPK approve
+            $totalRejected = Pengajuan::where('status', 'rejected_ppk')->count();
+
+            // Kalau mau bisa tambahkan kategori juga di sini untuk PPK
         } else {
             $pengajuans = collect();
         }
 
-        return view('approve.dashboard', compact('pengajuans', 'user'));
+        return view('approve.dashboard', compact(
+            'pengajuans',
+            'user',
+            'totalPending',
+            'totalApproved',
+            'totalRejected',
+            'pendingPembelian',
+            'pendingProsesKeuangan',
+            'pendingHonor'
+        ));
     }
 
     public function pengajuan()
@@ -98,6 +131,28 @@ class ApproveController extends Controller
 
         $pengajuan->save();
         return back()->with('error', 'Pengajuan ditolak!');
+    }
+
+    public function pengajuanKategori($kategori)
+    {
+        $user = auth()->user();
+
+        // Ambil pengajuan sesuai kategori
+        $query = Pengajuan::with('user');
+
+        if ($kategori === 'pengadaan') {
+            $query->whereIn('jenis_pengajuan', ['pembelian', 'pengadaan', 'kerusakan']);
+        } elseif ($kategori === 'proses_keuangan') {
+            $query->where('jenis_pengajuan', 'proses_keuangan');
+        } elseif ($kategori === 'honor') {
+            $query->where('jenis_pengajuan', 'honor');
+        } else {
+            abort(404);
+        }
+
+        $pengajuans = $query->get();
+
+        return view('approve.daftar_kategori', compact('pengajuans', 'kategori', 'user'));
     }
 
     public function laporan(Request $request)

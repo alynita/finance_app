@@ -7,13 +7,21 @@
     <h1>Edit Value KRO</h1>
 </div>
 
-<form action="{{ route('admin.kro.update', $kro->id) }}" method="POST">
+<form action="{{ isset($kro) ? route('admin.kro.update', $kro->id) : route('admin.kro.store') }}" method="POST">
     @csrf
-    @method('PUT')
-    <div style="display:flex; gap:1rem;">
-        <input type="text" name="value" value="{{ $kro->value }}" required>
-        <button type="submit" class="btn">Simpan</button>
-        <a href="{{ route('admin.kro.index') }}" class="btn" style="background:#ccc;">Batal</a>
+    @if(isset($kro)) @method('PUT') @endif
+
+    <div class="mb-2">
+        <label>KRO</label> 
+        <input type="text" name="kode" class="form-control" value="{{ $kro->kode ?? old('kode') }}">
     </div>
+
+    <div class="mb-2">
+        <label>Kode Akun</label>
+        <input type="text" name="kode_akun" class="form-control" value="{{ $kro->kode_akun ?? old('kode_akun') }}">
+    </div>
+
+    <button type="submit" class="btn btn-success">{{ isset($kro) ? 'Update' : 'Simpan' }}</button>
 </form>
+
 @endsection

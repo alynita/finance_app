@@ -13,22 +13,24 @@ class Honor extends Model
         'nama_kegiatan',
         'waktu',
         'alokasi_anggaran',
-        'nama',
-        'jabatan',
-        'tujuan',
-        'uang_harian',
-        'pph21',
-        'jumlah_dibayar',
-        'nomor_rekening',
-        'atas_nama',
-        'bank',
         'adum_id',
         'adum_approved_at',
         'ppk_id',
         'ppk_approved_at',
-        'user_id', // penanggung jawab / pengaju
+        'user_id', 
         'status',
     ];
+
+    public function details()
+    {
+        return $this->hasMany(HonorDetail::class);
+    }
+
+    public function kro()
+    {
+        return $this->belongsTo(KroAccount::class, 'kro_account_id');
+    }
+    
 
     // Relasi ke ADUM
     public function adum()

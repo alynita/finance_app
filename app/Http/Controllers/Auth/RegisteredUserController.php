@@ -32,13 +32,14 @@ class RegisteredUserController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:'.User::class],
+            'nip' => ['nullable', 'string', 'max:18', 'unique:'.User::class], // NIP optional, unik
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'nip' => $request->nip, // simpan NIP
             'password' => Hash::make($request->password),
             'role' => 'pegawai', // default role
         ]);

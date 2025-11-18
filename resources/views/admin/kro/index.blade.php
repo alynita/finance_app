@@ -23,25 +23,22 @@
 <!-- Form search -->
 <input type="text" id="search" placeholder="Cari KRO..." value="{{ request('search') }}" style="margin-bottom:1rem;">
 
-<!-- Tabel KRO -->
-<table id="kro-table">
+<table class="table table-bordered">
     <thead>
         <tr>
-            <th>No</th>
-            <th>KRO/Kode Akun</th>
+            <th>Kode</th>
+            <th>Kode Akun</th>
             <th>Aksi</th>
         </tr>
     </thead>
     <tbody>
-        @foreach($kros as $index => $kro)
+        @foreach($kro as $kro)
         <tr data-id="{{ $kro->id }}">
-            <td>{{ $index + 1 }}</td>
+            <td class="kode-text">{{ $kro->kode }}</td>
+            <td class="kode-akun-text">{{ $kro->kode_akun }}</td>
             <td>
-                <input type="text" class="value-input" value="{{ $kro->value }}">
-                <button class="btn btn-update">Simpan</button>
-            </td>
-            <td>
-                <button class="btn btn-delete" style="background:#ff5c5c;">Hapus</button>
+                <button class="btn-edit-kode btn btn-sm btn-warning">Edit Kode</button>
+                <button class="btn-edit-akun btn btn-sm btn-info">Edit Kode Akun</button>
             </td>
         </tr>
         @endforeach
@@ -52,49 +49,79 @@
 document.addEventListener('DOMContentLoaded', function() {
     const csrf = '{{ csrf_token() }}';
 
-    // AJAX Hapus
-    document.querySelectorAll('.btn-delete').forEach(btn => {
+    // Edit Kode
+    document.querySelectorAll('.btn-edit-kode').forEach(btn => {
         btn.addEventListener('click', function() {
-            if (!confirm('Yakin ingin hapus KRO ini?')) return;
-
             const tr = this.closest('tr');
-            const id = tr.getAttribute('data-id');
+            const td = tr.querySelector('.kode-text');
+            const currentValue = td.textContent.trim();
 
-            fetch(`/admin/kro/${id}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
-            }).then(res => res.json())
-                .then(() => tr.remove())
-                .catch(err => alert('Gagal hapus KRO'));
+            // Ganti ke input
+            td.innerHTML = `<input type="text" value="${currentValue}" class="form-control kode-input" style="width:120px; display:inline-block;">
+                            <button class="btn-save btn btn-sm btn-success">Save</button>
+                            <button class="btn-cancel btn btn-sm btn-secondary">Cancel</button>`;
+
+            // Save
+            td.querySelector('.btn-save').addEventListener('click', function() {
+                const newValue = td.querySelector('.kode-input').value;
+                const id = tr.dataset.id;
+
+                fetch(`/admin/kro/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'X-CSRF-TOKEN': csrf,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ kode: newValue })
+                }).then(res => res.json())
+                  .then(data => {
+                      td.textContent = newValue;
+                  }).catch(err => alert('Gagal update Kode'));
+            });
+
+            // Cancel
+            td.querySelector('.btn-cancel').addEventListener('click', function() {
+                td.textContent = currentValue;
+            });
         });
     });
 
-    // AJAX Update
-    document.querySelectorAll('.btn-update').forEach(btn => {
+    // Edit Kode Akun
+    document.querySelectorAll('.btn-edit-akun').forEach(btn => {
         btn.addEventListener('click', function() {
             const tr = this.closest('tr');
-            const id = tr.getAttribute('data-id');
-            const value = tr.querySelector('.value-input').value;
+            const td = tr.querySelector('.kode-akun-text');
+            const currentValue = td.textContent.trim();
 
-            fetch(`/admin/kro/${id}`, {
-                method: 'PUT',
-                headers: { 'X-CSRF-TOKEN': csrf, 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ value })
-            }).then(res => res.json())
-                .then(data => alert('KRO berhasil diperbarui!'))
-                .catch(err => alert('Gagal update KRO'));
-        });
-    });
+            td.innerHTML = `<input type="text" value="${currentValue}" class="form-control kode-akun-input" style="width:120px; display:inline-block;">
+                            <button class="btn-save btn btn-sm btn-success">Save</button>
+                            <button class="btn-cancel btn btn-sm btn-secondary">Cancel</button>`;
 
-    // AJAX Search
-    const searchInput = document.getElementById('search');
-    searchInput.addEventListener('input', function() {
-        const keyword = this.value.toLowerCase();
-        document.querySelectorAll('#kro-table tbody tr').forEach(tr => {
-            const value = tr.querySelector('.value-input').value.toLowerCase();
-            tr.style.display = value.includes(keyword) ? '' : 'none';
+            td.querySelector('.btn-save').addEventListener('click', function() {
+                const newValue = td.querySelector('.kode-akun-input').value;
+                const id = tr.dataset.id;
+
+                fetch(`/admin/kro/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'X-CSRF-TOKEN': csrf,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ kode_akun: newValue })
+                }).then(res => res.json())
+                    .then(data => {
+                        td.textContent = newValue;
+                    }).catch(err => alert('Gagal update Kode Akun'));
+            });
+
+            td.querySelector('.btn-cancel').addEventListener('click', function() {
+                td.textContent = currentValue;
+            });
         });
     });
 });
 </script>
+
 @endsection

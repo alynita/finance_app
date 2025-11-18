@@ -11,19 +11,6 @@
         <p><strong>Alokasi Anggaran:</strong> {{ $honor->alokasi_anggaran }}</p>
     </div>
 
-    <!-- Tentukan jenis uang berdasarkan pengajuan -->
-    @php
-        // Tentukan jenis uang dari baris pertama yang ada nominalnya
-        $detailPertama = $honor->details->first();
-        if ($detailPertama->uang_transport > 0) {
-            $jenisUang = 'transport';
-            $labelUang = 'Uang Transport';
-        } else {
-            $jenisUang = 'harian';
-            $labelUang = 'Uang Harian';
-        }
-    @endphp
-
     <!-- TABEL DETAIL ORANG -->
     <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
         <thead style="background:#f8f9fa;">
@@ -32,7 +19,7 @@
                 <th style="border:1px solid #ccc; padding:8px;">Jabatan</th>
                 <th style="border:1px solid #ccc; padding:8px;">Tujuan</th>
                 <th style="border:1px solid #ccc; padding:8px;">Jumlah Hari</th>
-                <th style="border:1px solid #ccc; padding:8px;">{{ $labelUang }}</th>
+                <th style="border:1px solid #ccc; padding:8px;">Uang Harian</th>
                 <th style="border:1px solid #ccc; padding:8px;">PPH 21 (%)</th>
                 <th style="border:1px solid #ccc; padding:8px;">Potongan Lain (%)</th>
                 <th style="border:1px solid #ccc; padding:8px;">Jumlah Dibayar</th>
@@ -45,32 +32,16 @@
             @php $totalKeseluruhan = 0; @endphp
 
             @foreach ($honor->details as $detail)
-                @php
-                    // Ambil nominal sesuai jenis uang
-                    $nominal = $jenisUang === 'transport'
-                        ? ($detail->uang_transport ?? 0)
-                        : ($detail->uang_harian ?? 0);
-
-                    $totalKeseluruhan += $detail->jumlah_dibayar;
-                @endphp
-
+                @php $totalKeseluruhan += $detail->jumlah_dibayar; @endphp
                 <tr>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->nama }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->jabatan }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->tujuan }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->jumlah_hari }}</td>
-
-                    <td style="border:1px solid #ccc; padding:8px;">
-                        Rp {{ number_format($nominal, 0, ',', '.') }}
-                    </td>
-                    
+                    <td style="border:1px solid #ccc; padding:8px;">Rp {{ number_format($detail->uang_harian, 0, ',', '.') }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->pph21 }}%</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->potongan_lain ?? 0 }}%</td>
-
-                    <td style="border:1px solid #ccc; padding:8px;">
-                        Rp {{ number_format($detail->jumlah_dibayar, 0, ',', '.') }}
-                    </td>
-
+                    <td style="border:1px solid #ccc; padding:8px;">Rp {{ number_format($detail->jumlah_dibayar, 0, ',', '.') }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->nomor_rekening }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->atas_nama }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->bank }}</td>
@@ -88,7 +59,6 @@
 
     <!-- BAGIAN TANDA TANGAN -->
     <div style="display:flex; justify-content:space-between; margin-top:50px;">
-
         <!-- ADUM -->
         <div style="flex:1; text-align:center;">
             <div>MENGETAHUI</div>
@@ -131,7 +101,7 @@
         </div>
     </div>
 
-    <a href="{{ route('keuangan.honor.data') }}" 
+    <a href="{{ route('bendahara.dashboard') }}" 
         style="padding:6px 12px; background:#0E7C3A; color:white; border-radius:4px; text-decoration:none; display:inline-block; margin-top:30px;">
         Kembali
     </a>

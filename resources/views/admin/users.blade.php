@@ -42,7 +42,14 @@
                                 <option value="keuangan" {{ $user->role == 'keuangan' ? 'selected' : '' }}>Keuangan</option>
                                 <option value="penyelenggara_pengadaan" {{ $user->role == 'penyelenggara_pengadaan' ? 'selected' : '' }}>Penyelenggara Pengadaan</option>
                                 <option value="bendahara" {{ $user->role == 'bendahara' ? 'selected' : '' }}>Bendahara</option>
-                                <option value="admin" {{ $user->role == 'admin' ? 'selected' : '' }}>Admin</option>
+                                <option value="timker_1" {{ $user->role == 'timker_1' ? 'selected' : '' }}>Timker 1</option>
+                                <option value="timker_2" {{ $user->role == 'timker_2' ? 'selected' : '' }}>Timker 2</option>
+                                <option value="timker_3" {{ $user->role == 'timker_3' ? 'selected' : '' }}>Timker 3</option>
+                                <option value="timker_4" {{ $user->role == 'timker_4' ? 'selected' : '' }}>Timker 4</option>
+                                <option value="timker_5" {{ $user->role == 'timker_5' ? 'selected' : '' }}>Timker 5</option>
+                                <option value="timker_6" {{ $user->role == 'timker_6' ? 'selected' : '' }}>Timker 6</option>
+                                <option value="sarpras" {{ $user->role == 'sarpras' ? 'selected' : '' }}>Sarpras</option>
+                                <option value="bmn" {{ $user->role == 'bmn' ? 'selected' : '' }}>BMN</option>
                             </select>
                             <button type="submit" class="btn" style="background-color:#1B263B; color:white; border:none; padding:5px 10px; border-radius:5px;">
                                 Simpan

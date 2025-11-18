@@ -192,5 +192,10 @@
         </div>
     </div>
 
+    <a href="{{ route('bendahara.dashboard') }}" 
+        style="padding:6px 12px; background:#0E7C3A; color:white; border-radius:4px; text-decoration:none; display:inline-block; margin-top:30px;">
+        Kembali
+    </a>
+
 </div>
 @endsection
