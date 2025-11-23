@@ -8,6 +8,8 @@ use App\Models\PengajuanItem;
 use Illuminate\Support\Facades\DB;
 use \App\Models\Honor;
 use \App\Models\KroAccount;
+use \App\Models\HonorDetail;
+use \App\Models\User;
 
 class KeuanganController extends Controller
 {
@@ -96,12 +98,16 @@ class KeuanganController extends Controller
             $item->dibayarkan = $convertToDecimal($data['dibayarkan'] ?? $item->dibayarkan);
             $item->no_rekening = $data['no_rekening'] ?? $item->no_rekening;
             $item->bank = $data['bank'] ?? $item->bank;
+
+            // Tambahan untuk Pajak Baru
+            $item->nama_pajak_baru = $data['nama_pajak_baru'] ?? $item->nama_pajak_baru;
+            $item->hasil_pajak_baru = $convertToDecimal($data['hasil_pajak_baru'] ?? $item->hasil_pajak_baru);
+
             $item->save();
         }
 
-        // Update group agar status pindah ke laporan
         $group->update([
-            'status' => 'processed',  // biar bisa muncul di dashboard ADUM
+            'status' => 'processed',
             'kode_akun' => $request->kode_akun ?? $group->kode_akun,
         ]);
 
@@ -145,6 +151,7 @@ class KeuanganController extends Controller
             'waktu' => 'required|date',
             'alokasi_anggaran' => 'required',
             'nama.*' => 'required',
+            'nip.*'=>'required',
             'jabatan.*' => 'required',
             'tujuan.*' => 'required',
             'jenis_uang.*' => 'required', 
@@ -203,6 +210,7 @@ class KeuanganController extends Controller
             // Simpan detail
             $honor->details()->create([
                 'nama' => $nama,
+                'nip' => $request->nip[$index],
                 'jabatan' => $request->jabatan[$index],
                 'tujuan' => $request->tujuan[$index],
                 'jumlah_hari' => $hari,
@@ -224,7 +232,11 @@ class KeuanganController extends Controller
     // List semua honor
     public function honorData()
     {
-        $honors = \App\Models\Honor::latest()->get();
+        $perPage = request('perPage', 10);
+
+        $honors = \App\Models\Honor::latest()
+            ->paginate($perPage);
+
         return view('keuangan.honor_data', compact('honors'));
     }
 
@@ -232,9 +244,34 @@ class KeuanganController extends Controller
     public function honorDetail($id)
     {
         // Ambil data honor beserta semua detail-nya
-        $honor = \App\Models\Honor::with(['details', 'adum', 'ppk', 'user'])->findOrFail($id);
+        $honor = \App\Models\Honor::with(['details', 'adum', 'ppk', 'user'])
+            ->findOrFail($id);
 
         return view('keuangan.honor_detail', compact('honor'));
+    }
+
+    public function indexLaporan()
+    {
+        $perPage = request('perPage', 10);
+
+        // Ambil data honor yang sudah dibayar atau sudah diproses
+        $honors = Honor::latest()
+            ->paginate($perPage);
+
+        return view('keuangan.honor_index_laporan', compact('honors'));
+    }
+
+    public function detailLaporan($id)
+    {
+        $honors = Honor::with(['details', 'ppk'])->findOrFail($id);
+
+        // Hitung total dari kolom jumlah_dibayar
+        $totalBayar = $honors->details->sum('jumlah_dibayar');
+
+        // Ambil user dengan role 'bendahara'
+        $bendahara = User::where('role', 'bendahara')->first();
+
+        return view('keuangan.honor_detail_laporan', compact('honors', 'totalBayar', 'bendahara'));
     }
 
 }

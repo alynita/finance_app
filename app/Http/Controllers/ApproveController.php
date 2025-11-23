@@ -24,6 +24,12 @@ class ApproveController extends Controller
                 ->where('status', 'pending_' . $user->role)
                 ->get();
 
+                // Total pending / approved / rejected
+            $totalPending = $pengajuans->count();
+            $totalApproved = Pengajuan::where('status', 'pending_ppk')->count(); // setelah ADUM approve
+            $totalRejected = Pengajuan::where('status', 'rejected_adum')->count();
+
+
         } elseif ($user->role === 'adum') {
             $pengajuans = Pengajuan::with('items', 'user')
                 ->where('status', 'pending_adum')
@@ -75,7 +81,31 @@ class ApproveController extends Controller
 
     public function pengajuan()
     {
-        $pengajuans = Pengajuan::with('items', 'user', 'mengetahui')->get();
+        $user = auth()->user();
+
+        if (str_starts_with($user->role, 'timker_')) {
+
+            $perPage = request('perPage', 10);
+
+            // Arsip khusus timker yang bersangkutan
+            $pengajuans = Pengajuan::with('items', 'user', 'mengetahui')
+                ->where('mengetahui_jabatan', $user->role)
+                ->latest()
+                ->paginate($perPage);
+
+        } elseif ($user->role === 'adum') {
+
+            $perPage = request('perPage', 10);
+
+            // Arsip khusus ADUM
+            $pengajuans = Pengajuan::with('items', 'user', 'mengetahui')
+                ->where('mengetahui_jabatan', 'adum')
+                ->latest()
+                ->paginate($perPage);
+        } else {
+            $pengajuans = collect();
+        }
+
         return view('approve.pengajuan', compact('pengajuans'));
     }
 

@@ -12,6 +12,7 @@ class HonorDetail extends Model
     protected $fillable = [
         'honor_id',
         'nama',
+        'nip',
         'jabatan',
         'tujuan',
         'jumlah_hari',

@@ -20,6 +20,7 @@ class Pengajuan extends Model
         'adum_id',
         'ppk_id',
         'mengetahui_id',
+        'mengetahui_jabatan'
     ];
 
     protected $casts = [

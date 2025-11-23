@@ -5,7 +5,7 @@
     <h2 style="margin-bottom:20px;">Data Honor</h2>
 
     <!-- Pilih jumlah entri per halaman -->
-    <form method="GET" action="{{ route('keuangan.honor.data') }}" style="margin-bottom:15px;">
+    <form method="GET" action="{{ route('bendahara.arsip.honor.list') }}" style="margin-bottom:15px;">
         <label for="perPage" style="font-weight:bold; margin-right:10px;">Tampilkan:</label>
         <select name="perPage" id="perPage" onchange="this.form.submit()" style="padding:4px;">
             @foreach([10, 25, 50, 100] as $size)
@@ -33,9 +33,14 @@
                     <td style="border:1px solid #ccc; padding:8px;">{{ $honor->created_at->format('d-m-Y H:i') }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $honor->nama_kegiatan }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">
-                        <a href="{{ route('keuangan.honor.detail', $honor->id) }}" 
-                            style="padding:4px 8px; background:#007bff; color:white; border-radius:4px; text-decoration:none;">
+                        <a href="{{ route('bendahara.honor.show', $honor->id) }}" 
+                            style="padding:4px 8px; background:#007bff; color:white; border-radius:4px; text-decoration:none; margin-right:5px;">
                             Lihat Detail
+                        </a>
+
+                        <a href="{{ route('bendahara.honor.download.pdf', $honor->id ) }}"
+                            style="background:green; color:white; padding:0.3rem 0.6rem; border-radius:4px; text-decoration:none;">
+                            Download PDF
                         </a>
                     </td>
                 </tr>

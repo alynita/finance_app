@@ -13,22 +13,16 @@
         <div style="flex:1; background:white; padding:15px; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1); text-align:center;">
             <h4>Pengadaan & Kerusakan Barang</h4>
             <p style="font-size:24px; font-weight:bold;">{{ $pendingPembelian }}</p>
-            <a href="{{ route('ppk.pengajuan.kategori', 'pengadaan') }}" 
-                style="background:#007bff; color:white; padding:5px 10px; border-radius:4px; text-decoration:none;">Lihat Semua</a>
         </div>
 
         <div style="flex:1; background:white; padding:15px; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1); text-align:center;">
             <h4>Proses Keuangan</h4>
             <p style="font-size:24px; font-weight:bold;">{{ $pendingProsesKeuangan }}</p>
-            <a href="{{ route('ppk.pengajuan.kategori', 'proses_keuangan') }}" 
-                style="background:#007bff; color:white; padding:5px 10px; border-radius:4px; text-decoration:none;">Lihat Semua</a>
         </div>
 
         <div style="flex:1; background:white; padding:15px; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1); text-align:center;">
             <h4>Honor</h4>
             <p style="font-size:24px; font-weight:bold;">{{ $pendingHonor }}</p>
-            <a href="{{ route('ppk.pengajuan.kategori', 'honor') }}" 
-                style="background:#007bff; color:white; padding:5px 10px; border-radius:4px; text-decoration:none;">Lihat Semua</a>
         </div>
     </div>
 

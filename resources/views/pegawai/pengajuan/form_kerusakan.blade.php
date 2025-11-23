@@ -58,8 +58,8 @@ function tambahItem() {
         <input type="number" class="jumlah_dana_pengajuan" name="items[${itemCount}][jumlah_dana_pengajuan]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;" readonly required>
 
         <label>Foto Barang (opsional)</label>
-        <input type="file" name="items[${itemCount}][foto]" style="width:100%; padding:0.5rem; margin-bottom:0.5rem;">
-
+        <input type="file" name="items[${idx}][foto]" style="width:100%;padding:0.5rem;margin-bottom:0.5rem;">
+        
         <button type="button" onclick="hapusItem(${itemCount})" style="background:#ff5c5c; color:white; border:none; padding:0.3rem 0.6rem; border-radius:4px;">Hapus Item</button>
     `;
 

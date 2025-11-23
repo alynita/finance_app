@@ -29,6 +29,7 @@
         <thead style="background:#f8f9fa;">
             <tr>
                 <th style="border:1px solid #ccc; padding:8px;">Nama</th>
+                <th style="border:1px solid #ccc; padding:8px;">NIP</th>
                 <th style="border:1px solid #ccc; padding:8px;">Jabatan</th>
                 <th style="border:1px solid #ccc; padding:8px;">Tujuan</th>
                 <th style="border:1px solid #ccc; padding:8px;">Jumlah Hari</th>
@@ -56,6 +57,7 @@
 
                 <tr>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->nama }}</td>
+                    <td style="border:1px solid #ccc; padding:8px;">{{ $detail->nip }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->jabatan }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->tujuan }}</td>
                     <td style="border:1px solid #ccc; padding:8px;">{{ $detail->jumlah_hari }}</td>
@@ -79,7 +81,7 @@
 
             <!-- BARIS TOTAL -->
             <tr style="font-weight:bold; background:#f1f1f1;">
-                <td colspan="7" style="border:1px solid #ccc; padding:8px; text-align:right;">TOTAL</td>
+                <td colspan="8" style="border:1px solid #ccc; padding:8px; text-align:right;">TOTAL</td>
                 <td style="border:1px solid #ccc; padding:8px;">Rp {{ number_format($totalKeseluruhan, 0, ',', '.') }}</td>
                 <td colspan="3" style="border:1px solid #ccc; padding:8px;"></td>
             </tr>

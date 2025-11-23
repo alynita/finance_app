@@ -10,9 +10,9 @@
         <thead>
             <tr>
                 <th style="border:1px solid #ccc; padding:0.5rem;">No</th>
+                <th style="border:1px solid #ccc; padding:0.5rem;">Created At</th>
                 <th style="border:1px solid #ccc; padding:0.5rem;">Nama Kegiatan</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Waktu</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Alokasi Anggaran</th>
+                <th style="border:1px solid #ccc; padding:0.5rem;">Waktu Kegiatan</th>
                 <th style="border:1px solid #ccc; padding:0.5rem;">Status</th>
                 <th style="border:1px solid #ccc; padding:0.5rem;">Detail</th>
                 <th style="border:1px solid #ccc; padding:0.5rem;">Aksi</th>
@@ -22,9 +22,9 @@
             @foreach($honors as $index => $honor)
             <tr>
                 <td style="border:1px solid #ccc; padding:0.5rem;">{{ $index + 1 }}</td>
+                <td style="border:1px solid #ccc; padding:0.5rem;">{{ \Carbon\Carbon::parse($honor->created_at)->format('d-m-Y') }}</td>
                 <td style="border:1px solid #ccc; padding:0.5rem;">{{ $honor->nama_kegiatan }}</td>
                 <td style="border:1px solid #ccc; padding:0.5rem;">{{ \Carbon\Carbon::parse($honor->waktu)->format('d-m-Y') }}</td>
-                <td style="border:1px solid #ccc; padding:0.5rem;">{{ $honor->alokasi_anggaran }}</td>
                 <td style="border:1px solid #ccc; padding:0.5rem;">
                     @switch($honor->status)
                         @case('pending') <span style="color:orange;">Menunggu ADUM</span> @break

@@ -52,25 +52,30 @@ class HonorController extends Controller
                 $honor->adum_id = $user->id;
                 $honor->adum_approved_at = Carbon::now();
                 $honor->status = 'adum_approved';
-                break;
+                $honor->save();
+
+                return back()->with('success', 'Honor berhasil diapprove ADUM!');
+            
 
             case 'ppk':
                 if ($honor->status !== 'adum_approved') {
                     return back()->with('error', 'Harus diapprove ADUM dulu!');
                 }
+
                 $honor->ppk_id = $user->id;
                 $honor->ppk_approved_at = Carbon::now();
                 $honor->status = 'ppk_approved';
-                break;
+                $honor->save();
+
+                // 🔥 setelah PPK approve → buka halaman laporan
+                return redirect()->route('keuangan.honor_index_laporan', $honor->id);
+            
 
             default:
                 return back()->with('error', 'Role tidak memiliki hak approve.');
         }
-
-        $honor->save();
-
-        return back()->with('success', 'Honor berhasil diapprove!');
     }
+
 
     // SIMPAN ARSIP (khusus Bendahara & Verifikator)
     public function simpanArsip($id)
@@ -108,4 +113,5 @@ class HonorController extends Controller
         $honor = Honor::findOrFail($id);
         return view('honor.detail', compact('honor'));
     }
+    
 }

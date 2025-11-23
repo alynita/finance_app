@@ -49,4 +49,10 @@ class Honor extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    // Relasi ke Bendahara
+    public function bendahara()
+    {
+        return $this->belongsTo(User::class, 'bendahara_id');
+    }
 }

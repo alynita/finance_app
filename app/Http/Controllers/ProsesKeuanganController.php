@@ -40,7 +40,6 @@ class ProsesKeuanganController extends Controller
 
     public function approve($id)
     {
-        // Cari PpkGroup berdasarkan ID yang dikirim dari blade
         $group = PpkGroup::with('pengajuan')->findOrFail($id);
         $user = auth()->user();
 
@@ -48,7 +47,7 @@ class ProsesKeuanganController extends Controller
             case 'adum':
                 $group->adum_approved_process = 1;
                 $group->adum_id = $user->id;
-                $group->adum_approved_at = now(); // optional: simpan timestamp
+                $group->adum_approved_at = now();
                 $group->status = 'adum_approved';
                 break;
 
@@ -58,7 +57,7 @@ class ProsesKeuanganController extends Controller
                 }
                 $group->ppk_approved_process = 1;
                 $group->ppk_id = $user->id;
-                $group->ppk_approved_at = now(); // optional
+                $group->ppk_approved_at = now();
                 $group->status = 'ppk_approved';
                 break;
 
@@ -68,7 +67,7 @@ class ProsesKeuanganController extends Controller
                 }
                 $group->verifikator_approved_process = 1;
                 $group->verifikator_id = $user->id;
-                $group->verifikator_approved_at = now(); // optional
+                $group->verifikator_approved_at = now();
                 $group->status = 'approved';
                 break;
 
@@ -77,6 +76,12 @@ class ProsesKeuanganController extends Controller
         }
 
         $group->save();
+
+        //  🔥 UPDATE STATUS TABEL PENGAJUAN
+        if ($group->pengajuan) {
+            $group->pengajuan->status = $group->status;  // samakan statusnya
+            $group->pengajuan->save();
+        }
 
         return back()->with('success', 'Pengajuan berhasil diapprove!');
     }

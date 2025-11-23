@@ -88,39 +88,61 @@ body {
 }
 .sidebar.collapsed a span { display: none; }
 
-/* Dropdown Menu */
+/* Container dropdown */
 .dropdown {
     position: relative;
+    width: 100%;
 }
+
+/* Tombol dropdown */
 .dropdown-btn {
     background: none;
     border: none;
     color: var(--gray-text);
     cursor: pointer;
     width: 100%;
+    padding: 10px 20px;
+    font-size: 1rem;
     text-align: left;
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+    border-radius: 6px;
+    transition: all 0.2s ease;
 }
+
+/* Hover tombol */
 .dropdown-btn:hover {
     background-color: var(--green-light);
     color: var(--white);
 }
+
+/* Isi dropdown */
 .dropdown-content {
     display: none;
+    position: relative;
+    background-color: var(--white);
+    border-left: 3px solid var(--green-main);
+    margin-left: 10px;
+    padding-left: 10px;
     flex-direction: column;
-    background-color: var(--green-main);
 }
+
+/* Link di dropdown */
 .dropdown-content a {
-    padding: 6px 20px;
-    color: var(--white);
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    color: var(--gray-text);
+    display: block;
     text-decoration: none;
-    transition: background 0.3s ease;
+    border-radius: 4px;
+    transition: 0.2s ease;
 }
+
+/* Hover link */
 .dropdown-content a:hover {
-    background-color: var(--green-dark);
+    background: var(--green-light);
+    color: var(--white);
 }
+
+/* Saat hover container, tampilkan menu */
 .dropdown:hover .dropdown-content {
     display: flex;
 }
@@ -220,20 +242,32 @@ body {
 
         <!-- Dropdown Honor -->
         <div class="dropdown">
-            <button class="dropdown-btn"><span>Honor</span></button>
+            <button class="dropdown-btn">Honor ▾</button>
             <div class="dropdown-content">
                 <a href="{{ route('keuangan.honor.form') }}">Pengajuan Honor</a>
                 <a href="{{ route('keuangan.honor.data') }}">Data Honor</a>
+                <a href="{{ route('keuangan.honor.index.laporan') }}">Laporan SPD Rampung</a>
             </div>
         </div>
 
     @elseif($user->role == 'verifikator')
         <a href="{{ route('verifikator.dashboard') }}"><span>Dashboard</span></a>
-        <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
+        <a href="{{ route('verifikator.proses') }}"><span>Proses Keuangan</span></a>
+        <a href="{{ route('verifikator.arsip') }}"><span>Arsip Honor</span></a>
+
 
     @elseif($user->role == 'bendahara')
         <a href="{{ route('bendahara.dashboard') }}"><span>Dashboard</span></a>
-        <a href="{{ route('bendahara.arsip') }}"><span>Arsip</span></a>
+
+        {{-- Dropdown Arsip --}}
+        <div class="dropdown">
+            <button class="dropdown-btn">Arsip ▾</button>
+            <div class="dropdown-content">
+                <a href="{{ route('bendahara.arsip.pengadaan.list') }}">Pengadaan Barang</a>
+                <a href="{{ route('bendahara.arsip.kerusakan.list') }}">Kerusakan Barang</a>
+                <a href="{{ route('bendahara.arsip.honor.list') }}">Honor</a>
+            </div>
+        </div>
     @endif
 
     <a href="{{ route('profile.edit') }}"><span>Profile</span></a>

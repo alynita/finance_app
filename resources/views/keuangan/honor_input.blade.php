@@ -38,11 +38,16 @@
         <div id="honor-container">
             <div class="honor-row" style="background:#ffffff; padding:20px; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.1); margin-bottom:20px;">
                 
-                <!-- Baris Nama dan Jabatan -->
+                <!-- Baris Nama, NIP, dan Jabatan -->
                 <div style="display:flex; gap:15px; margin-bottom:20px;">
                     <div style="flex:1; display:flex; flex-direction:column;">
                         <label style="margin-bottom:5px;">Nama</label>
                         <input type="text" name="nama[]" placeholder="Masukkan nama" required
+                            style="padding:10px; border:1px solid #ccc; border-radius:5px; margin-bottom:5px; box-sizing:border-box;">
+                    </div>
+                    <div style="flex:1; display:flex; flex-direction:column;">
+                        <label style="margin-bottom:5px;">NIP</label>
+                        <input type="text" name="nip[]" placeholder="Masukkan NIP" required
                             style="padding:10px; border:1px solid #ccc; border-radius:5px; margin-bottom:5px; box-sizing:border-box;">
                     </div>
                     <div style="flex:1; display:flex; flex-direction:column;">
@@ -257,21 +262,27 @@
         const template = container.firstElementChild;
         const newRow = template.cloneNode(true);
 
-        // reset values inside the cloned row
+        // reset semua input & select di row baru
         newRow.querySelectorAll('input, select').forEach(el => {
-            if (el.type === 'number' || el.type === 'text' || el.tagName === 'INPUT') el.value = '';
+            if (el.type === 'number' || el.type === 'text') el.value = '';
             if (el.tagName === 'SELECT') el.selectedIndex = 0;
         });
 
-        // ensure hidden/visible inputs set consistent initial state
+        // pastikan input uang harian/transport terlihat sesuai jenis default
         const inputHarian = newRow.querySelector('[name="uang_harian[]"]');
         const inputTransport = newRow.querySelector('[name="uang_transport[]"]');
         if (inputHarian) inputHarian.style.display = 'block';
         if (inputTransport) inputTransport.style.display = 'none';
 
-        container.appendChild(newRow);
+        // pastikan PPH manual hidden
+        const pphManual = newRow.querySelector('[name="pph21_manual[]"]');
+        const pphSelect = newRow.querySelector('[name="pph21[]"]');
+        if (pphManual) pphManual.style.display = 'none';
+
+        // attach event listener baru di row yang dikloning
         attachListeners(newRow);
-        index++;
+
+        container.appendChild(newRow);
     });
 
     // attach to existing rows on page load

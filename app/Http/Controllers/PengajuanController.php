@@ -132,11 +132,15 @@ class PengajuanController extends Controller
             ];
 
             // Upload foto
-            if ($request->hasFile("items.$i.foto")) {
+            if ($request->file("items.$i.foto")) {
                 $foto = $request->file("items.$i.foto");
                 $filename = time() . '_' . $foto->getClientOriginalName();
-                $path = $foto->storeAs('public/pengajuan', $filename);
-                $dataItem['foto'] = str_replace('public', '/storage', $path); // /storage/pengajuan/filename.jpg
+
+                // Simpan ke storage/app/public/pengajuan
+                $foto->storeAs('pengajuan', $filename, 'public');
+
+                // Simpan path yang benar ke database
+                $dataItem['foto'] = 'pengajuan/' . $filename;
             } else {
                 $dataItem['foto'] = null;
             }
@@ -195,9 +199,12 @@ class PengajuanController extends Controller
 
     public function index()
     {
+        $perPage = request('perPage', 10);
+
         $pengajuans = Pengajuan::with('items', 'adum', 'ppk')
             ->where('user_id', auth()->id())
-            ->get();
+            ->latest() // otomatis sort by created_at DESC
+            ->paginate($perPage);
 
         return view('pegawai.pengajuan.index', compact('pengajuans'));
     }

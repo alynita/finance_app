@@ -6,6 +6,19 @@
 @section('content')
 <h2>Laporan Keuangan</h2>
 
+<!-- Pilih jumlah entri per halaman -->
+    <form method="GET" action="{{ route('keuangan.laporan') }}" style="margin-bottom:15px;">
+        <label for="perPage" style="font-weight:bold; margin-right:10px;">Tampilkan:</label>
+        <select name="perPage" id="perPage" onchange="this.form.submit()" style="padding:4px;">
+            @foreach([10, 25, 50, 100] as $size)
+                <option value="{{ $size }}" {{ request('perPage', 10) == $size ? 'selected' : '' }}>
+                    {{ $size }}
+                </option>
+            @endforeach
+        </select>
+        <span>entri</span>
+    </form>
+
 @if(session('success'))
     <div style="background-color:#d4edda; color:#155724; padding:10px; margin-bottom:10px; border-radius:5px;">
         {{ session('success') }}

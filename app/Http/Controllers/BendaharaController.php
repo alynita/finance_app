@@ -6,66 +6,61 @@ use Illuminate\Http\Request;
 use App\Models\Pengajuan;
 use App\Models\PpkGroup;
 use App\Models\Honor;
+use App\Models\HonorDetail;
+use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class BendaharaController extends Controller
 {
-    // ====== DASHBOARD BENDAHARA ======
+    // ================= DASHBOARD =================
     public function dashboard()
     {
-        // 🔹 Ambil semua laporan pengadaan/pembelian barang
-        $laporanBarang = PpkGroup::with(['pengajuan.user', 'items'])
-            ->whereIn('status', [
-                'processed',
-                'adum_approved',
-                'ppk_approved',
-                'approved',
-                'completed'
-            ])
-            ->get();
-
-        // 🔹 Ambil semua laporan honor yang sudah masuk ke Bendahara
-        $laporanHonor = Honor::with('user')
-            ->whereIn('status', [
-                'adum_approved',
-                'ppk_approved',
-                'approved',
-                'completed'
-            ])
-            ->get();
-
-        // 🔹 Gabungkan dua jenis laporan jadi satu koleksi untuk ditampilkan di tabel
-        $laporans = collect([
-            ...$laporanBarang,
-            ...$laporanHonor
-        ]);
-
-        // 🔹 Hitung total pengadaan & honor
-        $totalPengadaan = $laporanBarang->count();
-        $totalHonor     = $laporanHonor->count();
-
-        // 🔹 Hitung total arsip & menunggu arsip
-        $totalArsip = Pengajuan::where('arsip', true)->count()
-                    + Honor::where('arsip', true)->count();
-
-        $menungguArsip = Pengajuan::where('arsip', false)
-                            ->whereIn('status', ['adum_approved','ppk_approved','approved'])
-                            ->count()
-                        + Honor::where('arsip', false)
-                            ->whereIn('status', ['adum_approved','ppk_approved','approved'])
+        // Total Pengadaan & Kerusakan YANG SUDAH PROCESSED & BELUM DIARSIPKAN
+        $totalPengadaan = \App\Models\PpkGroup::whereIn('status', ['processed', 'approved'])
+                            ->where('arsip', 0)
                             ->count();
 
-        // 🔹 Kirim semua ke view
+        // Total Honor YANG SUDAH PROCESSED & BELUM DIARSIPKAN
+        $totalHonor = \App\Models\Honor::whereIn('status', ['pending', 'ppk_approved'])
+                        ->where('arsip', 0)
+                        ->count();
+
+        // Total Arsip (yang sudah diarsipkan)
+        $totalArsip =
+            \App\Models\PpkGroup::where('arsip', 1)->count() +
+            \App\Models\Honor::where('arsip', 1)->count();
+
+        // Menunggu Arsip (processed/approved dan belum diarsipkan)
+        $menungguArsip =
+            \App\Models\PpkGroup::whereIn('status', ['processed', 'approved'])
+                ->where('arsip', 0)
+                ->count() +
+            \App\Models\Honor::whereIn('status', ['pending', 'ppk_approved'])
+                ->where('arsip', 0)
+                ->count();
+
+        // Laporan terakhir (hanya yg belum diarsipkan)
+        $laporans = collect()
+            ->merge(\App\Models\PpkGroup::whereIn('status', ['processed', 'approved'])
+                ->where('arsip', 0)
+                ->latest()->take(10)->get())
+            ->merge(\App\Models\Honor::whereIn('status', ['pending', 'ppk_approved'])
+                ->where('arsip', 0)
+                ->latest()->take(10)->get())
+            ->sortByDesc('created_at')
+            ->values();
+
         return view('bendahara.dashboard', compact(
-            'laporans',
             'totalPengadaan',
             'totalHonor',
             'totalArsip',
-            'menungguArsip'
+            'menungguArsip',
+            'laporans'
         ));
     }
 
-    // ====== DETAIL LAPORAN ======
+    
+    // =============== DETAIL LAPORAN ===============
     public function show($groupId)
     {
         $group = PpkGroup::with([
@@ -76,68 +71,106 @@ class BendaharaController extends Controller
             'pengajuan.verifikator'
         ])->findOrFail($groupId);
 
-        $pengajuan = $group->pengajuan;
-
-        return view('bendahara.detail_laporan', compact('group','pengajuan'));
+        return view('bendahara.detail_laporan', compact('group'));
     }
 
     public function showHonor($id)
     {
-        $honor = \App\Models\Honor::findOrFail($id);
-        return view('bendahara.detail_honor', compact('honor'));
+        $honor = Honor::findOrFail($id);
+        // Ambil bendahara
+        $bendahara = User::where('role', 'bendahara')->first();
+
+        return view('bendahara.detail_honor', compact('honor', 'bendahara'));
     }
 
-    // ====== SIMPAN ARSIP ======
-    public function simpanArsipPengadaan($id)
+    // ================= SIMPAN ARSIP =================
+    public function arsipPengadaan($id)
     {
-        $group = PpkGroup::findOrFail($id);
+        $pengadaan = PpkGroup::findOrFail($id);
+        $pengadaan->arsip = 1;
+        $pengadaan->save();
 
-        if (
-            $group->adum_approved_process == 1 &&
-            $group->ppk_approved_process == 1 &&
-            $group->verifikator_approved_process == 1
-        ) {
-            $group->arsip = 1;
-            $group->save();
-
-            return back()->with('success', 'Data pengadaan berhasil diarsipkan.');
-        }
-
-        return back()->with('error', 'Approval pengadaan belum lengkap.');
+        return redirect()->route('bendahara.arsip.pengadaan.list')
+            ->with('success', 'Pengadaan berhasil diarsipkan!');
     }
 
-    public function simpanArsipHonor($id)
+    public function arsipKerusakan($id)
+    {
+        $kerusakan = PpkGroup::findOrFail($id);
+        $kerusakan->arsip = 1;
+        $kerusakan->save();
+
+        return redirect()->route('bendahara.arsip.kerusakan.list')
+            ->with('success', 'Kerusakan berhasil diarsipkan!');
+    }
+
+    public function arsipHonor($id)
     {
         $honor = Honor::findOrFail($id);
+        $honor->arsip = 1;
+        $honor->save();
 
-        if (!is_null($honor->adum_approved_at) && !is_null($honor->ppk_approved_at)) {
-            $honor->arsip = 1;
-            $honor->save();
-
-            return back()->with('success', 'Data honor berhasil diarsipkan.');
-        }
-
-        return back()->with('error', 'Approval honor belum lengkap.');
+        return redirect()->route('bendahara.arsip.honor.list')
+            ->with('success', 'Honor berhasil diarsipkan!');
     }
 
-    // ====== DOWNLOAD PDF ======
-    public function downloadPDF($id)
+    // ================= LIST ARSIP =================
+    public function arsipPengadaanList()
     {
-        $pengajuan = Pengajuan::with(['items','honorariums','adum','ppk','verifikator'])
-            ->findOrFail($id);
+        $perPage = request('perPage', 10);
 
-        $pdf = Pdf::loadView('bendahara.detail_laporan_pdf', compact('pengajuan'))
+        $pengadaans = PpkGroup::with('pengajuan')
+            ->where('arsip', 1)
+            ->where('jenis', 'pengadaan')
+            ->paginate($perPage); // jangan pakai ->get()
+
+        return view('bendahara.arsip.pengadaan', compact('pengadaans'));
+    }
+
+    public function arsipKerusakanList()
+    {
+        $kerusakans = PpkGroup::with('pengajuan')
+            ->where('arsip', 1)
+            ->where('jenis', 'kerusakan')
+            ->get();
+
+        return view('bendahara.arsip.kerusakan', compact('kerusakans'));
+    }
+
+    public function arsipHonorList()
+    {
+        $perPage = request('perPage', 10);
+
+        $honors = Honor::where('arsip', 1)->paginate($perPage);
+
+        return view('bendahara.arsip.honor', compact('honors'));
+    }
+
+    // ================= DOWNLOAD PDF HONOR =================
+    public function downloadHonorPDF($id)
+    {
+        // Ambil honor beserta relasinya
+        $honors = Honor::with(['details', 'adum', 'ppk'])->findOrFail($id);
+
+        // Ambil bendahara
+        $bendahara = User::where('role', 'bendahara')->first();
+
+        $pdf = Pdf::loadView('bendahara.honor_pdf', compact('honors', 'bendahara'))
             ->setPaper('A4', 'landscape');
 
-        return $pdf->download('laporan_'.$pengajuan->id.'.pdf');
+        return $pdf->download('honor_'.$honors->id.'.pdf');
     }
 
-    // ====== HALAMAN ARSIP ======
-    public function arsip()
+    // ================= DOWNLOAD PDF PENGADAAN =================
+    public function downloadPengadaanPdf($id)
     {
-        $laporans = Pengajuan::where('arsip', true)->get()
-                    ->merge(Honor::where('arsip', true)->get());
+        $group = PpkGroup::with(['pengajuan','items','adum','ppk','verifikator'])
+            ->findOrFail($id);
 
-        return view('bendahara.arsip', compact('laporans'));
+        $pdf = Pdf::loadView('bendahara.pengadaan_pdf', compact('group'))
+            ->setPaper('A4', 'landscape');
+
+        return $pdf->download('pengadaan_'.$group->id.'.pdf');
     }
+
 }

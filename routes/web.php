@@ -14,6 +14,7 @@ use App\Http\Controllers\PpkController;
 use App\Http\Controllers\HonorController;
 use App\Http\Controllers\KroController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\VerifikatorController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -146,8 +147,12 @@ Route::prefix('keuangan')->group(function() {
     Route::post('/honor/store', [KeuanganController::class, 'storeHonor'])->name('keuangan.honor.store');
     Route::get('/honor/data', [KeuanganController::class, 'honorData'])->name('keuangan.honor.data');
     Route::get('/honor/detail/{id}', [KeuanganController::class, 'honorDetail'])->name('keuangan.honor.detail');
-    Route::get('/honor/{id}/laporan', [HonorController::class, 'laporan'])->name('honor.laporan');
     Route::post('/honor/{id}/simpan-arsip', [HonorController::class, 'simpanArsip'])->name('honor.simpanArsip');
+    // Halaman daftar laporan honor
+    Route::get('/honor/laporan', [KeuanganController::class, 'indexLaporan'])->name('keuangan.honor.index.laporan');
+    // Halaman detail laporan berdasarkan ID
+    Route::get('/honor/laporan/{id}', [KeuanganController::class, 'detailLaporan'])->name('keuangan.honor.detail.laporan');
+
 });
 
 //Bendahara
@@ -155,12 +160,23 @@ Route::prefix('bendahara')->group(function() {
     Route::get('/dashboard', [BendaharaController::class, 'dashboard'])->name('bendahara.dashboard');
     Route::get('/laporan/{id}', [BendaharaController::class, 'show'])->name('bendahara.laporan.show');
     Route::get('/bendahara/honor/{id}', [BendaharaController::class, 'showHonor'])->name('bendahara.honor.show');
-    Route::post('/bendahara/arsip/pengadaan/{id}', [BendaharaController::class, 'simpanArsipPengadaan'])
-        ->name('bendahara.arsip.pengadaan');
-    Route::post('/bendahara/arsip/honor/{id}', [BendaharaController::class, 'simpanArsipHonor'])
-        ->name('bendahara.arsip.honor');
+
+    Route::get('/arsip/pengadaan', [BendaharaController::class, 'arsipPengadaanList'])->name('bendahara.arsip.pengadaan.list');
+    Route::get('/arsip/kerusakan', [BendaharaController::class, 'arsipKerusakanList'])->name('bendahara.arsip.kerusakan.list');
+    Route::get('/arsip/honor', [BendaharaController::class, 'arsipHonorList'])->name('bendahara.arsip.honor.list');
+
+    Route::post('/arsip/pengadaan/{id}', [BendaharaController::class, 'arsipPengadaan'])->name('bendahara.arsip.pengadaan');
+    Route::post('/arsip/honor/{id}', [BendaharaController::class, 'arsipHonor'])->name('bendahara.arsip.honor');
     Route::get('/laporan/{id}/download', [BendaharaController::class, 'downloadPDF'])->name('bendahara.download-pdf');
-    Route::get('/arsip', [BendaharaController::class, 'arsip'])->name('bendahara.arsip');
+
+    // HONOR
+    Route::get('/honor/{id}/pdf', [BendaharaController::class, 'downloadHonorPdf'])
+        ->name('bendahara.honor.download.pdf');
+
+    // PENGADAAN
+    Route::get('/laporan/{id}/pdf', [BendaharaController::class, 'downloadPengadaanPdf'])
+        ->name('bendahara.laporan.download.pdf');
+
 });
 
 
@@ -177,11 +193,17 @@ Route::middleware(['auth'])->group(function() {
     Route::get('/proses-keuangan/reject/{id}', [ProsesKeuanganController::class, 'reject'])->name('proses.reject');
 }); 
 
-//Verifikator
-Route::prefix('verifikator')->middleware(['auth'])->group(function(){
-    Route::get('/dashboard', [ProsesKeuanganController::class, 'dashboard'])->name('verifikator.dashboard');
-    Route::get('/proses-keuangan/approve/{id}', [ProsesKeuanganController::class, 'approve'])->name('proses.approve');
+// Verifikator
+Route::prefix('verifikator')->middleware(['auth'])->group(function() {
+    Route::get('/dashboard', [VerifikatorController::class, 'dashboard'])->name('verifikator.dashboard');
+    Route::get('/proses-keuangan', [VerifikatorController::class, 'prosesKeuangan'])->name('verifikator.proses');
+    Route::get('/arsip-honor', [VerifikatorController::class, 'arsipHonor'])->name('verifikator.arsip');
+    Route::get('/arsip-honor/{id}', [VerifikatorController::class, 'detailHonor'])->name('verifikator.honor.detail');
+    
+    Route::post('/proses-keuangan/approve/{id}', [VerifikatorController::class, 'approve'])->name('verifikator.proses.approve');
+    Route::post('/proses-keuangan/reject/{id}', [VerifikatorController::class, 'reject'])->name('verifikator.proses.reject');
 });
+
 
 //Honor
 Route::prefix('honor')->middleware('auth')->group(function () {

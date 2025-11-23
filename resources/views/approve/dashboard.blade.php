@@ -25,8 +25,10 @@
             <p style="font-size:1.4rem; font-weight:600; margin:0.3rem 0 0;">{{ $pendingHonor }}</p>
         </div>
     </div>
+    @endif
 
     {{-- Baris 2: Status --}}
+    @if(str_starts_with($user->role, 'timker_') || $user->role === 'adum')
     <div style="display:flex; gap:1rem; margin-top:0.8rem;">
         <div style="flex:1; background:white; padding:0.8rem 1rem; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.1); text-align:center; height:90px;">
             <h4 style="margin:0; font-size:0.9rem;">Total Pending</h4>

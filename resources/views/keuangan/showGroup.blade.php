@@ -106,9 +106,26 @@
                     <label><input type="checkbox" class="ppn-check" data-index="{{ $index }}" {{ $ppnDecimal>0?'checked':'' }}> PPN</label><br>
                     <label><input type="checkbox" class="npwp-check" data-index="{{ $index }}" {{ $pph22Decimal>0 || $pph23Decimal>0?'checked':'' }}> NPWP</label>
                 </div>
+                <div>
+                    <label>Nama Pajak Baru</label><br>
+                    <input type="text" name="items[{{ $item->id }}][nama_pajak_baru]"
+                        class="nama-pajak-baru" data-index="{{ $index }}"
+                        style="padding:6px; width:80px; border:1px solid #ccc; border-radius:5px;">
+
+                    <br>
+
+                    <label style="margin-top:6px; display:block;">Persentase (%)</label>
+                    <input type="number" min="0" max="100"
+                        name="items[{{ $item->id }}][persen_pajak_baru]"
+                        class="persen-pajak-baru"
+                        data-index="{{ $index }}"
+                        style="padding:6px; width:80px; border:1px solid #ccc; border-radius:5px;"
+                        placeholder="%">
+                </div>
             </div>
 
-            <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap:15px;">
+            <!-- Baris 1: PPH & Pajak Baru -->
+            <div style="display:grid; grid-template-columns: repeat(4, minmax(150px,1fr)); gap:15px; margin-bottom:10px;">
                 <div>
                     <label>PPH 21 (Rp)</label>
                     <input type="text" name="items[{{ $item->id }}][hasil_pph21]" class="hasil_pph21" data-index="{{ $index }}" readonly style="width:100%; padding:6px; border:1px solid #ccc; border-radius:5px; background:#f1f3f5;">
@@ -121,6 +138,14 @@
                     <label>PPH 23 (Rp)</label>
                     <input type="text" name="items[{{ $item->id }}][hasil_pph23]" class="hasil_pph23" data-index="{{ $index }}" readonly style="width:100%; padding:6px; border:1px solid #ccc; border-radius:5px; background:#f1f3f5;">
                 </div>
+                <div>
+                    <label class="label-pajak-baru" data-index="{{ $index }}">Pajak Baru (Rp)</label>
+                    <input type="text" name="items[{{ $item->id }}][hasil_pajak_baru]" class="hasil_pajak_baru" data-index="{{ $index }}" readonly style="width:100%; padding:6px; border:1px solid #ccc; border-radius:5px; background:#f1f3f5;">
+                </div>
+            </div>
+
+            <!-- Baris 2: PPN & Dibayarkan -->
+            <div style="display:grid; grid-template-columns: repeat(2, minmax(150px,1fr)); gap:15px;">
                 <div>
                     <label>PPN (Rp)</label>
                     <input type="text" name="items[{{ $item->id }}][hasil_ppn]" class="hasil_ppn" data-index="{{ $index }}" readonly style="width:100%; padding:6px; border:1px solid #ccc; border-radius:5px; background:#f1f3f5;">
@@ -168,66 +193,94 @@ window.onload = function() {
     }
 
     function updateTotals() {
-        for (let i = 0; i < itemCount; i++) {
-            const jumlah = parseCurrency(document.querySelector(`.jumlah[data-index="${i}"]`)?.value || '0');
-            const punyaNPWP = document.querySelector(`.npwp-check[data-index="${i}"]`)?.checked || false;
+    for (let i = 0; i < itemCount; i++) {
+        const jumlah = parseCurrency(document.querySelector(`.jumlah[data-index="${i}"]`)?.value || '0');
+        const punyaNPWP = document.querySelector(`.npwp-check[data-index="${i}"]`)?.checked || false;
 
-            // ==== PPN ====
-            // Ambil elemen checkbox PPN sesuai index baris
-            const ppnCheck = document.querySelector(`.ppn-check[data-index="${i}"]`);
+        // ==== PPN ====
+        const ppnCheck = document.querySelector(`.ppn-check[data-index="${i}"]`);
+        if (jumlah >= 2000000) {
+            ppnCheck.checked = true;
+        } else {
+            ppnCheck.checked = false;
+        }
+        const isPPN = ppnCheck.checked;
+        const ppn = isPPN ? (jumlah * 100 / 111) * 0.11 : 0;
 
-            // Otomatis centang jika jumlah >= 2 juta
-            if (jumlah >= 2000000) {
-                ppnCheck.checked = true;
-            } else {
-                ppnCheck.checked = false;
-            }
+        // ==== PPH 21 ====
+        const sel = document.querySelector(`.pph21-select[data-index="${i}"]`);
+        let pph21Rate = parseFloat(sel.value);
+        if(sel.value === 'manual') {
+            pph21Rate = parseFloat(document.querySelector(`.pph21-manual[data-index="${i}"]`)?.value || 0)/100;
+        }
+        const pph21 = jumlah * pph21Rate;
 
-            // Hitung nilai PPN jika checkbox aktif
-            const isPPN = ppnCheck.checked;
-            const ppn = isPPN ? (jumlah * 100 / 111) * 0.11 : 0;
+        // ==== PPH 22 ====
+        const isPPH22 = document.querySelector(`.pph22-check[data-index="${i}"]`)?.checked;
+        const pph22 = isPPH22 ? (jumlah - ppn) * (punyaNPWP ? 0.015 : 0.03) : 0;
 
-            // ==== PPH 21 ====
-            const sel = document.querySelector(`.pph21-select[data-index="${i}"]`);
-            let pph21Rate = parseFloat(sel.value);
-            if(sel.value === 'manual') {
-                pph21Rate = parseFloat(document.querySelector(`.pph21-manual[data-index="${i}"]`)?.value || 0)/100;
-            }
-            const pph21 = jumlah * pph21Rate;
+        // ==== PPH 23 ====
+        const isPPH23 = document.querySelector(`.pph23-check[data-index="${i}"]`)?.checked;
+        const pph23 = isPPH23 ? (jumlah - ppn) * (punyaNPWP ? 0.02 : 0.04) : 0;
 
-            // ==== PPH22 ====
-            // Kalau checkbox PPH22 dicentang
-            const isPPH22 = document.querySelector(`.pph22-check[data-index="${i}"]`)?.checked;
+        // ==================================================
+        // 🔥 ==== PAJAK BARU (Custom Tax) ==== 
+        // ==================================================
 
-            // Hitung PPH22 dari jumlah dikurangi PPN
-            const pph22 = isPPH22 ? (jumlah - ppn) * (punyaNPWP ? 0.015 : 0.03) : 0;
+        // Ambil nama pajak baru (text)
+        const namaPajakBaru = document.querySelector(`.nama-pajak-baru[data-index="${i}"]`)?.value || '';
 
-            // ==== PPH 23 ====
-            const isPPH23 = document.querySelector(`.pph23-check[data-index="${i}"]`)?.checked;
-            const pph23 = isPPH23 ? (jumlah - ppn) * (punyaNPWP ? 0.02 : 0.04) : 0;
+        // Ambil persen pajak baru
+        let persenPajakBaru = parseFloat(document.querySelector(`.persen-pajak-baru[data-index="${i}"]`)?.value || 0);
 
-            // ==== TOTAL DIBAYARKAN ====
-            const dibayarkan = (jumlah - ppn) - (pph21 + pph22 + pph23);
+        // Konversi ke desimal
+        let pajakBaru = 0;
+        if (namaPajakBaru !== '' && persenPajakBaru > 0) {
+            pajakBaru = jumlah * (persenPajakBaru / 100);
+        }
 
-            // ==== UPDATE INPUT ====
-            document.querySelector(`.hasil_pph21[data-index="${i}"]`).value = formatCurrency(pph21);
+        // Kalau ada kolom "hasil_pajak_baru", isi otomatis
+        const hasilPajakBaruInput = document.querySelector(`.hasil_pajak_baru[data-index="${i}"]`);
+        if (hasilPajakBaruInput) {
+            hasilPajakBaruInput.value = formatCurrency(pajakBaru);
+        }
+
+        // ==================================================
+
+        // ==== TOTAL DIBAYARKAN (dikurangi semua pajak) ====
+        const dibayarkan = (jumlah - ppn) - (pph21 + pph22 + pph23 + pajakBaru);
+
+        // ==== UPDATE INPUT ====
+        document.querySelector(`.hasil_pph21[data-index="${i}"]`).value = formatCurrency(pph21);
             document.querySelector(`.hasil_pph22[data-index="${i}"]`).value = formatCurrency(pph22);
             document.querySelector(`.hasil_pph23[data-index="${i}"]`).value = formatCurrency(pph23);
             document.querySelector(`.hasil_ppn[data-index="${i}"]`).value = formatCurrency(ppn);
+
             document.querySelector(`.dibayarkan[data-index="${i}"]`).value = formatCurrency(dibayarkan);
 
-            // ==== SHOW/HIDE MANUAL INPUT ====
+            // ==== Show/hide manual input ====
             const manualInput = document.querySelector(`.pph21-manual[data-index="${i}"]`);
             manualInput.style.display = sel.value === 'manual' ? 'inline-block' : 'none';
         }
     }
 
-    document.querySelectorAll('.jumlah, .pph21-select, .pph21-manual, .pph22-check, .pph23-check, .ppn-check, .npwp-check').forEach(el => {
+    document.querySelectorAll('.jumlah, .pph21-select, .pph21-manual, .pph22-check, .pph23-check, .ppn-check, .npwp-check, .nama-pajak-baru, .persen-pajak-baru').forEach(el => {
         el.addEventListener('input', updateTotals);
         el.addEventListener('change', updateTotals);
     });
 
     updateTotals();
+
+    document.querySelectorAll('.nama-pajak-baru').forEach(input => {
+        input.addEventListener('input', () => {
+            const index = input.dataset.index;
+            const label = document.querySelector(`.label-pajak-baru[data-index="${index}"]`);
+            if(label) {
+                label.textContent = input.value ? `${input.value} (Rp)` : 'Pajak Baru (Rp)';
+            }
+        });
+    });
+
 }
 
 const kroAllData = @json($kroAll);

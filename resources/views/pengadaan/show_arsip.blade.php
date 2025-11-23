@@ -57,7 +57,6 @@
                         <th style="border:1px solid #ccc; padding:0.6rem;">Jenis Kerusakan</th>
                         <th style="border:1px solid #ccc; padding:0.6rem;">Jumlah Dana</th>
                         <th style="border:1px solid #ccc; padding:0.6rem;">Foto / Keterangan</th>
-                        <th style="border:1px solid #ccc; padding:0.6rem;">Link</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,7 +69,6 @@
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->jenis_kerusakan ?? '-' }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem; text-align:right;">{{ number_format($item->jumlah_dana_pengajuan, 0, ',', '.') }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->foto ?? '-' }}</td>
-                        <td style="border:1px solid #ccc; padding:0.5rem;">@if($item->link)<a href="{{ $item->link }}" target="_blank">Lihat</a>@endif</td>
                     </tr>
                     @endforeach
                 </tbody>

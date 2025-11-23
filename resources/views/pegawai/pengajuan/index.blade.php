@@ -5,6 +5,20 @@
 
 @section('content')
 <div style="max-width:900px; margin:auto;">
+
+    <!-- Pilih jumlah entri per halaman -->
+    <form method="GET" action="{{ route('pegawai.daftar-pengajuan') }}" style="margin-bottom:15px;">
+        <label for="perPage" style="font-weight:bold; margin-right:10px;">Tampilkan:</label>
+        <select name="perPage" id="perPage" onchange="this.form.submit()" style="padding:4px;">
+            @foreach([10, 25, 50, 100] as $size)
+                <option value="{{ $size }}" {{ request('perPage', 10) == $size ? 'selected' : '' }}>
+                    {{ $size }}
+                </option>
+            @endforeach
+        </select>
+        <span>entri</span>
+    </form>
+    
     <table style="width:100%; border-collapse: collapse;">
         <thead>
             <tr style="background:#f2f2f2;">

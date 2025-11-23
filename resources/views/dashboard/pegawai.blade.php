@@ -64,6 +64,7 @@
                 <th>Judul Pengajuan</th>
                 <th>Tanggal Pengajuan</th>
                 <th>Status Akhir</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -80,6 +81,13 @@
                         @else
                             Pending
                         @endif
+                    </td>
+                    <td>
+                        <a href="{{ route('pegawai.pengajuan.show', $pengajuan->id) }}"
+                            style="background:#3498db; color:white; padding:5px 10px; 
+                                    text-decoration:none; border-radius:3px;">
+                            Lihat Detail
+                        </a>
                     </td>
                 </tr>
             @empty

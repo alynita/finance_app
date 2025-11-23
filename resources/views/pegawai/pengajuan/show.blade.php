@@ -81,7 +81,9 @@
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->jumlah_dana_pengajuan ?? 0), 2) }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">
                             @if($item->foto)
-                                <img src="{{ asset($item->foto) }}" alt="Foto" style="max-width:80px; max-height:80px;">
+                                <img src="{{ asset('storage/'.$item->foto) }}" 
+                                    alt="Foto" 
+                                    style="width: 120px; height: auto; border-radius: 6px;" />
                             @else
                                 -
                             @endif
@@ -102,7 +104,9 @@
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->jumlah_dana_pengajuan ?? 0), 2) }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">
                             @if($item->foto)
-                                <a href="{{ asset($item->foto) }}" target="_blank">Lihat Foto</a>
+                                <img src="{{ asset('storage/'.$item->foto) }}" 
+                                    alt="Foto" 
+                                    style="width: 120px; height: auto; border-radius: 6px;" />
                             @else
                                 -
                             @endif

@@ -34,7 +34,7 @@
                             <th style="padding:10px;">Ongkos Kirim</th>
                             <th style="padding:10px;">Jumlah Dana</th>
                             <th style="padding:10px;">Link</th>
-                        @else
+                        @else($group->pengajuan->jenis_pengajuan === 'kerusakan')
                             <th style="padding:10px;">Harga Satuan</th>
                             <th style="padding:10px;">Jumlah Dana</th>
                             <th style="padding:10px;">Lokasi</th>
@@ -84,6 +84,39 @@
                                 <td style="border-bottom:1px solid #ddd; padding:0.6rem; text-align:center;">
                                     @if($item->link)
                                         <a href="{{ $item->link }}" target="_blank">Buka Link</a>
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                            @else($group->pengajuan->jenis_pengajuan === 'kerusakan')
+                                <td style="border-bottom:1px solid #ddd; padding:0.6rem;">
+                                    <span class="text-view">{{ number_format($item->harga_satuan, 0, ',', '.') }}</span>
+                                    <input type="number" class="form-input harga_satuan" 
+                                        name="items[{{ $item->id }}][harga_satuan]" value="{{ $item->harga_satuan }}" 
+                                        style="width:100%; padding:0.3rem; display:none;">
+                                </td>
+                                <td style="border-bottom:1px solid #ddd; padding:0.6rem; text-align:right;">
+                                    <span class="text-view">{{ number_format($item->jumlah_dana_pengajuan, 0, ',', '.') }}</span>
+                                    <input type="number" class="form-input jumlah_dana" 
+                                        name="items[{{ $item->id }}][jumlah_dana_pengajuan]" 
+                                        value="{{ $item->jumlah_dana_pengajuan }}" readonly 
+                                        style="width:100%; padding:0.3rem; display:none; background:#f0f0f0;">
+                                </td>
+                                <td style="border-bottom:1px solid #ddd; padding:0.6rem;">
+                                    <span class="text-view">{{ $item->lokasi ?? '-' }}</span>
+                                    <input type="text" name="items[{{ $item->id }}][lokasi]" 
+                                        value="{{ $item->lokasi }}" 
+                                        style="width:100%; padding:0.3rem; display:none;">
+                                </td>
+                                <td style="border-bottom:1px solid #ddd; padding:0.6rem;">
+                                    <span class="text-view">{{ $item->jenis_kerusakan ?? '-' }}</span>
+                                    <input type="text" name="items[{{ $item->id }}][jenis_kerusakan]" 
+                                        value="{{ $item->jenis_kerusakan }}" 
+                                        style="width:100%; padding:0.3rem; display:none;">
+                                </td>
+                                <td style="border:1px solid #ccc; padding:0.5rem;">
+                                    @if($item->foto)
+                                        <a href="{{ asset($item->foto) }}" target="_blank">Lihat Foto</a>
                                     @else
                                         -
                                     @endif

@@ -53,6 +53,9 @@ $totalDiterima = 0;
             <th>PPH 21</th>
             <th>PPH 22</th>
             <th>PPH 23</th>
+            <th>
+                {{ $group->items->first()->nama_pajak_baru ?? 'Pajak Baru (Rp)' }}
+            </th>
             <th>PPN</th>
             <th>Dibayarkan</th>
             <th>No Rekening</th>
@@ -66,11 +69,13 @@ $totalDiterima = 0;
             $pph22 = $item->pph22 ?? 0;
             $pph23 = $item->pph23 ?? 0;
             $ppn   = $item->ppn ?? 0;
-            $dibayarkan = $item->dibayarkan ?? ($item->jumlah_dana_pengajuan - ($pph21+$pph22+$pph23+$ppn));
+            $hasilPajakBaru = $item->hasil_pajak_baru ?? 0; // ambil hasil pajak baru
+            $dibayarkan = $item->dibayarkan ?? ($item->jumlah_dana_pengajuan - ($pph21+$pph22+$pph23+$ppn+$hasilPajakBaru));
 
-            $totalPajak += ($pph21 + $pph22 + $pph23 + $ppn);
+            $totalPajak += ($pph21 + $pph22 + $pph23 + $ppn + $hasilPajakBaru); // tambahkan hasil_pajak_baru
             $totalDiterima += $dibayarkan;
         @endphp
+
         <tr>
             <td>{{ $index + 1 }}</td>
             <td>{{ $item->invoice ?? '-' }}</td>
@@ -81,6 +86,7 @@ $totalDiterima = 0;
             <td>{{ number_format($pph21, 0, ',', '.') }}</td>
             <td>{{ number_format($pph22, 0, ',', '.') }}</td>
             <td>{{ number_format($pph23, 0, ',', '.') }}</td>
+            <td>{{ number_format($item->hasil_pajak_baru, 0, ',', '.') }}</td>
             <td>{{ number_format($ppn, 0, ',', '.') }}</td>
             <td>{{ number_format($dibayarkan, 0, ',', '.') }}</td>
             <td>{{ $item->no_rekening ?? '-' }}</td>
@@ -98,7 +104,6 @@ $totalDiterima = 0;
 
 {{-- Tanda tangan --}}
 <div style="display:flex; justify-content:space-between; margin-top:40px;">
-
     {{-- ADUM --}}
     <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center;">
         <div>MENGETAHUI</div>
