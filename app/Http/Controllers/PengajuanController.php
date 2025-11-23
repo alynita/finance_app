@@ -111,12 +111,18 @@ class PengajuanController extends Controller
             $pengajuan->mengetahui_jabatan = 'adum';
             $pengajuan->status = 'pending_adum';
         } else {
-            // Untuk pengajuan pembelian → tetap manual pilih mengetahui
-            $request->validate([
-                'mengetahui' => 'required|string',
-            ]);
-            $pengajuan->mengetahui_jabatan = $request->mengetahui;
-            $pengajuan->status = 'pending_' . $request->mengetahui;
+            // Atur mengetahui & status tergantung role pegawai
+            $userRole = auth()->user()->role;
+
+            // Jika dia anggota timker → kirim ke timker tersebut
+            if (str_starts_with($userRole, 'anggota_timker_')) {
+                $pengajuan->mengetahui_jabatan = str_replace('anggota_', '', $userRole);
+                $pengajuan->status = 'pending_' . $pengajuan->mengetahui_jabatan;
+            } else {
+                // Jika bukan timker → otomatis ADUM
+                $pengajuan->mengetahui_jabatan = 'adum';
+                $pengajuan->status = 'pending_adum';
+            }
         }
 
         $pengajuan->save();

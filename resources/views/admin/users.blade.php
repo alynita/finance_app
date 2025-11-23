@@ -42,12 +42,23 @@
                                 <option value="keuangan" {{ $user->role == 'keuangan' ? 'selected' : '' }}>Keuangan</option>
                                 <option value="penyelenggara_pengadaan" {{ $user->role == 'penyelenggara_pengadaan' ? 'selected' : '' }}>Penyelenggara Pengadaan</option>
                                 <option value="bendahara" {{ $user->role == 'bendahara' ? 'selected' : '' }}>Bendahara</option>
+                                
+                                <!--KETUA TIMKER-->
                                 <option value="timker_1" {{ $user->role == 'timker_1' ? 'selected' : '' }}>Timker 1</option>
                                 <option value="timker_2" {{ $user->role == 'timker_2' ? 'selected' : '' }}>Timker 2</option>
                                 <option value="timker_3" {{ $user->role == 'timker_3' ? 'selected' : '' }}>Timker 3</option>
                                 <option value="timker_4" {{ $user->role == 'timker_4' ? 'selected' : '' }}>Timker 4</option>
                                 <option value="timker_5" {{ $user->role == 'timker_5' ? 'selected' : '' }}>Timker 5</option>
                                 <option value="timker_6" {{ $user->role == 'timker_6' ? 'selected' : '' }}>Timker 6</option>
+
+                                <!-- ANGGOTA TIMKER -->
+                                <option value="anggota_timker_1" {{ $user->role == 'anggota_timker_1' ? 'selected' : '' }}>Anggota Timker 1</option>
+                                <option value="anggota_timker_2" {{ $user->role == 'anggota_timker_2' ? 'selected' : '' }}>Anggota Timker 2</option>
+                                <option value="anggota_timker_3" {{ $user->role == 'anggota_timker_3' ? 'selected' : '' }}>Anggota Timker 3</option>
+                                <option value="anggota_timker_4" {{ $user->role == 'anggota_timker_4' ? 'selected' : '' }}>Anggota Timker 4</option>
+                                <option value="anggota_timker_5" {{ $user->role == 'anggota_timker_5' ? 'selected' : '' }}>Anggota Timker 5</option>
+                                <option value="anggota_timker_6" {{ $user->role == 'anggota_timker_6' ? 'selected' : '' }}>Anggota Timker 6</option>
+
                                 <option value="sarpras" {{ $user->role == 'sarpras' ? 'selected' : '' }}>Sarpras</option>
                                 <option value="bmn" {{ $user->role == 'bmn' ? 'selected' : '' }}>BMN</option>
                             </select>

@@ -206,6 +206,10 @@ body {
         <a href="{{ route('pegawai.pengajuan.create') }}"><span>Buat Pengajuan</span></a>
         <a href="{{ route('pegawai.daftar-pengajuan') }}"><span>Daftar Pengajuan</span></a>
 
+    @elseif(str_starts_with($user->role, 'anggota_timker_'))
+        <a href="{{route('anggota_timker.dashboard') }}"><span>Dashboard</span></a>
+        <a href="{{route('anggota_timker.create') }}"><span>Buat Pengajuan</span></a>
+        <a href="{{route('anggota_timker.index') }}">Daftar Pengajuan<span></span></a>
     @elseif($user->role == 'sarpras')
         <a href="{{ route('sarpras.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('pegawai.pengajuan.create') }}"><span>Buat Pengajuan</span></a>

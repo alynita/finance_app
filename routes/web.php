@@ -15,6 +15,7 @@ use App\Http\Controllers\HonorController;
 use App\Http\Controllers\KroController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\VerifikatorController;
+use App\http\Controllers\AnggotaTimkerController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -52,6 +53,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/pegawai/daftar-pengajuan', [PengajuanController::class, 'index'])->name('pegawai.daftar-pengajuan');
     Route::get('/pegawai/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])->name('pegawai.pengajuan.show');
 });
+
+//*Anggota Timker*/
+Route::prefix('anggota_timker')->middleware('auth')->group(function () {
+    Route::get('/dashboard', [AnggotaTimkerController::class, 'dashboard'])->name('anggota_timker.dashboard');
+    Route::get('/pengajuan', [AnggotaTimkerController::class, 'daftarPengajuan'])->name('anggota_timker.index');
+    Route::get('/pengajuan/create', [AnggotaTimkerController::class, 'create'])->name('anggota_timker.create');
+});
+
 
 // Dropdown form pengajuan
 Route::get('/kro/children/{id}', [KroController::class, 'getChildren']);
