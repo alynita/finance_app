@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Keuangan BBPK Jakarta</title>
+    <title>Sistem Pengelolaan dan Pengadaan Barang BBPK Jakarta</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
@@ -196,7 +196,7 @@
         <section class="hero">
             <div class="hero-content">
                 <div class="hero-text">
-                    <h2>Efisiensi dan Akuntabilitas dalam Pengelolaan Aset dan Pengadaan Barang</h2>
+                    <h2>Efisiensi dan Akuntabilitas dalam Pengelolaan dan Pengadaan Barang</h2>
                     <p>
                         Aplikasi ini mempermudah proses pengajuan kerusakan, permintaan pembelian, serta alur persetujuan antarbagian secara digital dan terintegrasi.
                     </p>

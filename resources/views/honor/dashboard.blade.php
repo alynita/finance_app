@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard ADUM')
+@section('title', 'Dashboard Approve Honor')
 @section('content')
 <div style="max-width:1000px; margin:auto;">
-    <h2>Dashboard Honor ADUM</h2>
+    <h2>Dashboard Approve Honor </h2>
 
     @if($honors->count() > 0)
     <table style="width:100%; border-collapse:collapse;">

@@ -134,7 +134,7 @@
             <tbody>
                 @foreach($group->items as $index => $item)
                 <tr>
-                    <td>{{ $index+1 }}</td>
+                    <td>{{ $index + 1 }}</td>
                     <td>{{ $item->nama_barang }}</td>
                     <td>{{ $item->volume }}</td>
                     @if($pengajuan->jenis_pengajuan === 'kerusakan')
@@ -156,17 +156,21 @@
                 @endforeach
             </tbody>
         </table>
-
-        @if($group->status === 'pending_ppk')
-            <form action="{{ route('ppk.approveGroup', $group->id) }}" method="POST" style="margin-bottom:10px;">
-                @csrf
-                <button type="submit" style="padding:6px 12px; background:#4CAF50; color:white; border:none; border-radius:4px;">✅ Approve Grup Ini</button>
-            </form>
-        @endif
         <hr>
     @empty
         <p><em>Belum ada grup. Klik “Buat Grup” jika ingin memecah item pengajuan.</em></p>
     @endforelse
+
+    {{-- ✅ Tombol approve semua grup --}}
+    @if($pengajuan->ppkGroups->where('status','pending_ppk')->count() > 0)
+    <form action="{{ route('ppk.approveAllGroups', $pengajuan->id) }}" method="POST" style="margin-top:10px;">
+        @csrf
+        <button type="submit" style="padding:8px 15px; background:#4CAF50; color:white; border:none; border-radius:4px;">
+            ✅ Approve Semua Grup
+        </button>
+    </form>
+    @endif
+
 </div>
 
 <script>
@@ -204,22 +208,42 @@ function renderGroup(){
 
     html += '<th>Jumlah Dana</th></tr></thead><tbody>';
 
-    @foreach($pengajuan->items as $index => $item)
-        html += selectedItems.has({{ $item->id }}) ? '' : `
+    const items = document.querySelectorAll('tr[data-item-id]');
+    items.forEach((row, index) => {
+        const itemId = parseInt(row.dataset.itemId);
+        if(selectedItems.has(itemId)) return;
+
+        const namaBarang = row.children[1].textContent;
+        const volume = row.children[2].textContent;
+        let kro = '';
+        let ongkir = '';
+        if(pengajuanType !== 'kerusakan'){
+            kro = row.querySelector('.kro-hidden')?.value || '';
+            ongkir = row.children[5].textContent; // sesuaikan index kolom ongkir
+        }
+        let lokasi = '';
+        let jenisKerusakan = '';
+        if(pengajuanType === 'kerusakan'){
+            lokasi = row.children[4].textContent;
+            jenisKerusakan = row.children[5].textContent;
+        }
+        const jumlahDana = row.children[pengajuanType==='kerusakan'?6:6].textContent;
+
+        html += `
             <tr>
                 <td style="text-align:center;">
-                    <input type="checkbox" class="item-checkbox" value="{{ $item->id }}" name="groups[${groupCount}][]">
+                    <input type="checkbox" class="item-checkbox" value="${itemId}" name="groups[${groupCount}][]">
                 </td>
-                <td>{{ $index + 1 }}</td>
-                <td>{{ $item->nama_barang }}</td>
-                <td>{{ $item->volume }}</td>
-                ${pengajuanType === 'kerusakan'
-                    ? `<td>{{ $item->lokasi ?? '-' }}</td><td>{{ $item->jenis_kerusakan ?? '-' }}</td>`
-                    : `<td>{{ $item->kro ?? '-' }}</td><td>{{ number_format($item->ongkos_kirim,0,',','.') }}</td>`}
-                <td>{{ number_format($item->jumlah_dana_pengajuan,0,',','.') }}</td>
+                <td>${index+1}</td>
+                <td>${namaBarang}</td>
+                <td>${volume}</td>
+                ${pengajuanType==='kerusakan'
+                    ? `<td>${lokasi}</td><td>${jenisKerusakan}</td>`
+                    : `<td>${kro}</td><td>${ongkir}</td>`}
+                <td>${jumlahDana}</td>
             </tr>
         `;
-    @endforeach
+    });
 
     html += '</tbody></table>';
     groupDiv.innerHTML = html;

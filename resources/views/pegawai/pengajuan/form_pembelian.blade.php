@@ -3,67 +3,59 @@
 @section('title', 'Form Pengajuan Pembelian Barang')
 @section('header', 'Form Pengajuan Pembelian Barang')
 
-<style>
-.kro-dropdown-wrapper {
-    position: relative; /* penting */
-    margin-bottom: 1rem;
-}
-
-.kro-input {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-.kro-menu {
-    position: absolute;
-    top: 100%;  /* tepat di bawah input */
-    left: 0;
-    width: 100%;
-    max-height: 250px;
-    background: white;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    overflow-y: auto;
-    display: none;
-    z-index: 9999;
-    padding: 10px;
-}
-
-.kro-menu .tree-root {
-    font-size: 13px;
-}
-
-.kro-input {
-    width: 100% !important;
-    padding: 12px;
-    font-size: 20x; /* <— perbesar tulisan input */
-}
-
-.kro-dropdown {
-    width: 100%;
-    border: 1px solid #ccc;
-    padding: 12px;
-    margin-top: 5px;
-    border-radius: 5px;
-    background: white;
-    font-size: 20px; /* <— perbesar tulisan list KRO */
-}
-
-.kro-dropdown li, 
-.kro-dropdown span {
-    font-size: 20px; /* <— semua teks di dalam list */
-}
-
+<style> 
+.kro-dropdown-wrapper { 
+    position: relative; /* penting */ 
+    margin-bottom: 1rem; 
+    } 
+    .kro-input { 
+        width: 100%; 
+        padding: 12px; 
+        font-size: 16px; 
+        border: 1px solid #ccc; 
+        border-radius: 5px; 
+        
+    } 
+    .kro-menu { 
+        position: absolute; 
+        top: 100%; /* tepat di bawah input */ 
+        left: 0; width: 100%; 
+        max-height: 250px; 
+        background: white; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+        overflow-y: auto; 
+        display: none; 
+        z-index: 9999; 
+        padding: 10px; 
+    } 
+    .kro-menu .tree-root { 
+        font-size: 13px; 
+    } 
+    .kro-input { 
+        width: 100% !important; 
+        padding: 12px; 
+        font-size: 20x; /* <— perbesar tulisan input */ 
+    } 
+    .kro-dropdown { 
+        width: 100%; 
+        border: 1px solid #ccc; 
+        padding: 12px; 
+        margin-top: 5px; 
+        border-radius: 5px; 
+        background: white; 
+        font-size: 20px; /* <— perbesar tulisan list KRO */ 
+        } 
+        .kro-dropdown li, 
+        .kro-dropdown span { 
+            font-size: 20px; /* <— semua teks di dalam list */ 
+        } 
 </style>
-
 
 @section('content')
 <div style="max-width:900px;margin:auto;">
-    <form action="{{ route('pegawai.pengajuan.store') }}" method="POST" enctype="multipart/form-data">
-        @csrf
+    <form id="pengajuanForm" action="{{ route('pegawai.pengajuan.store') }}" method="POST" enctype="multipart/form-data">
+        @csrf 
 
         <!-- Informasi Pengajuan -->
         <div style="margin-bottom:1rem; padding:1rem; border:1px solid #ccc; border-radius:5px;">
@@ -76,10 +68,9 @@
 
             <input type="hidden" name="jenis_pengajuan" value="pembelian">
         </div>
+
         @php
             $role = Auth::user()->role;
-
-            // mapping otomatis anggota_timker_x → timker_x
             if (str_contains($role, 'anggota_timker_')) {
                 $timkerNumber = str_replace('anggota_timker_', '', $role);
                 $mengetahui_jabatan = 'timker_' . $timkerNumber;
@@ -90,7 +81,6 @@
 
         <input type="hidden" name="mengetahui_jabatan" value="{{ $mengetahui_jabatan }}">
 
-
         <div id="detail-items-container"></div>
 
         <button type="button" id="btnTambah" style="margin-bottom:1rem;padding:0.5rem 1rem;">+ Tambah Item</button>
@@ -99,9 +89,10 @@
 </div>
 
 <script>
-window.kroAll = @json($kroAll); // nested KRO dari controller
+window.kroAll = @json($kroAll);
 let itemCount = 0;
 
+// Tambah item baru
 document.getElementById('btnTambah').addEventListener('click', tambahItem);
 
 function tambahItem() {
@@ -160,35 +151,33 @@ function tambahItem() {
     hrg.addEventListener('input', hitung);
     ong.addEventListener('input', hitung);
 
-    // Buat KRO dropdown cascading
+    // Buat KRO dropdown
     initKroDropdown(idx);
-
 }
 
+// Hapus item
 function hapusItem(id) {
     const el = document.getElementById(`item-${id}`);
     if(el) el.remove();
 }
 
+// Dropdown KRO
 function initKroDropdown(idx) {
     const wrapper = document.getElementById(`kro-wrapper-${idx}`);
     const trigger = document.getElementById(`kro-trigger-${idx}`);
     const menu = document.getElementById(`kro-menu-${idx}`);
     const hiddenInput = document.getElementById(`kode_kro-${idx}`);
 
-    // toggle dropdown
     trigger.addEventListener("click", function () {
         menu.style.display = menu.style.display === "block" ? "none" : "block";
     });
 
-    // klik di luar → tutup dropdown
     document.addEventListener("click", function(e) {
         if (!wrapper.contains(e.target)) {
             menu.style.display = "none";
         }
     });
 
-    // generate tree
     menu.innerHTML = "";
     const treeRoot = document.createElement("div");
     treeRoot.classList.add("tree-root");
@@ -201,41 +190,9 @@ function initKroDropdown(idx) {
     });
 }
 
-// ------- SHOW / HIDE DROPDOWN -------
-document.addEventListener("click", function (e) {
-    const wrapper = document.getElementById("kro-wrapper");
-    const trigger = wrapper.querySelector(".kro-trigger");
-    const menu = wrapper.querySelector(".kro-menu");
-
-    // klik input → buka / tutup menu
-    if (trigger.contains(e.target)) {
-        menu.style.display = menu.style.display === "block" ? "none" : "block";
-        return;
-    }
-
-    // klik luar → tutup menu
-    if (!wrapper.contains(e.target)) {
-        menu.style.display = "none";
-    }
-});
-
-// ------- GENERATE TREEVIEW -------
-function createKroDropdown() {
-    const menu = document.querySelector("#kro-wrapper .kro-menu");
-    menu.innerHTML = "";
-
-    const treeRoot = document.createElement("div");
-    treeRoot.classList.add("tree-root");
-
-    buildTreeNodes(window.kroAll, treeRoot);
-
-    menu.appendChild(treeRoot);
-}
-
-// ------- BUILD TREE NODES -------
+// Build tree KRO
 function buildTreeNodes(data, parentEl, onSelect, path = []) {
     data.forEach(item => {
-
         const currentLabel = item.kode_akun ?? item.kode;
         const newPath = [...path, currentLabel];
 
@@ -256,49 +213,65 @@ function buildTreeNodes(data, parentEl, onSelect, path = []) {
         parentEl.appendChild(row);
 
         let childBox = null;
-        if (item.children?.length) {
+        if(item.children?.length) {
             childBox = document.createElement("div");
             childBox.style.display = "none";
             childBox.style.marginLeft = "20px";
             parentEl.appendChild(childBox);
-
             buildTreeNodes(item.children, childBox, onSelect, newPath);
         }
 
         toggle.addEventListener("click", () => {
-            if (!childBox) return;
+            if(!childBox) return;
             childBox.style.display = childBox.style.display === "block" ? "none" : "block";
             toggle.textContent = childBox.style.display === "block" ? "▾" : "▸";
         });
 
-        // KLIK LABEL → SEND VALUE MULAI LEVEL 3
         label.addEventListener("click", () => {
-
-    // hitung level berdasar panjang path
-    const level = newPath.length;
-
-    // LEVEL 1 & 2 → TIDAK BOLEH PILIH, cuma buka anak
-    if (level <= 2) {
-        if (childBox) {
-            childBox.style.display = "block";
-            toggle.textContent = "▾";
-        }
-        return; // <-- stop di sini
-    }
-
-        // LEVEL 3+ → BOLEH PILIH (ISI INPUT)
-        let finalPath = newPath.slice(2); // mulai dari level 3
-        const finalVal = finalPath.join('.');
-
-        onSelect(finalVal);
-    });
-
+            const level = newPath.length;
+            if(level <= 2) {
+                if(childBox) {
+                    childBox.style.display = "block";
+                    toggle.textContent = "▾";
+                }
+                return;
+            }
+            let finalPath = newPath.slice(2);
+            const finalVal = finalPath.join('.');
+            onSelect(finalVal);
+        });
     });
 }
 
+// Validasi KRO wajib
+document.getElementById('pengajuanForm').addEventListener('submit', function(e){
+    let valid = true;
 
+    const kodeInputs = document.querySelectorAll('input[name^="items"][name$="[kode_kro]"]');
+    kodeInputs.forEach((hiddenInput, idx) => {
+        const trigger = document.getElementById(`kro-trigger-${idx}`);
+        if(!hiddenInput.value || hiddenInput.value.trim() === ""){
+            valid = false;
+            trigger.setCustomValidity("Isi bidang ini");
+            trigger.reportValidity(); // tampilkan warning di input readonly
+        } else {
+            trigger.setCustomValidity(""); // reset valid
+        }
+    });
 
-// ------- LOAD TREEVIEW -------
-document.addEventListener("DOMContentLoaded", createKroDropdown);
+    if(!valid){
+        e.preventDefault(); // blok submit
+        // fokus ke field pertama yang kosong
+        const firstEmpty = Array.from(kodeInputs).find(i => !i.value);
+        if(firstEmpty){
+            document.getElementById(`kro-trigger-${Array.from(kodeInputs).indexOf(firstEmpty)}`).focus();
+        }
+    }
+});
+
+// Load item pertama otomatis
+document.addEventListener("DOMContentLoaded", function() {
+    tambahItem();
+});
 </script>
 @endsection

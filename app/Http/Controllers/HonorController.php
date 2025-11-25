@@ -68,7 +68,7 @@ class HonorController extends Controller
                 $honor->save();
 
                 // 🔥 setelah PPK approve → buka halaman laporan
-                return redirect()->route('keuangan.honor_index_laporan', $honor->id);
+                return redirect()->route('keuangan.honor.index.laporan', $honor->id);
             
 
             default:

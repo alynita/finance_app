@@ -131,7 +131,7 @@ Route::prefix('ppk')->name('ppk.')->group(function() {
     Route::get('/approve', [PpkController::class, 'approvedList'])->name('approve');
     Route::get('/{id}', [PpkController::class, 'show'])->name('show');
     Route::post('/{id}/store-group', [PpkController::class, 'storeGroup'])->name('storeGroup');
-    Route::post('/group/{id}/approve', [PpkController::class, 'approveGroup'])->name('approveGroup');
+    Route::post('/approve-all-groups/{pengajuan}', [PpkController::class, 'approveAllGroups'])->name('approveAllGroups');
     Route::post('/ppk/{id}/approve-semua', [PpkController::class, 'approveAll'])->name('approveAll');
     Route::get('/pengajuan/kategori/{kategori}', [ApproveController::class, 'pengajuanKategori'])
         ->name('pengajuan.kategori');
@@ -205,7 +205,7 @@ Route::middleware(['auth'])->group(function() {
 // Verifikator
 Route::prefix('verifikator')->middleware(['auth'])->group(function() {
     Route::get('/dashboard', [VerifikatorController::class, 'dashboard'])->name('verifikator.dashboard');
-    Route::get('/proses-keuangan', [VerifikatorController::class, 'prosesKeuangan'])->name('verifikator.proses');
+    Route::get('/proses-keuangan', [VerifikatorController::class, 'prosesKeuangan'])->name('proses.dashboard');
     Route::get('/arsip-honor', [VerifikatorController::class, 'arsipHonor'])->name('verifikator.arsip');
     Route::get('/arsip-honor/{id}', [VerifikatorController::class, 'detailHonor'])->name('verifikator.honor.detail');
     

@@ -9,7 +9,7 @@ class KroController extends Controller
 {
     public function index()
     {
-        $kro = Kro::all();
+        $kro = Kro::with('children')->whereNull('parent_id')->get();
         return view('admin.kro.index', compact('kro'));
     }
 
@@ -21,12 +21,22 @@ class KroController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'kode' => 'nullable|string|max:255',
-            'kode_akun' => 'nullable|string|max:255|unique:kros,kode_akun,' . $kro->id,
+            'kode' => 'required|string|max:255',
+            'kode_akun' => 'nullable|string|max:255|unique:kro,kode_akun',
+            'parent_id' => 'nullable|exists:kro,id'
         ]);
 
-        Kro::create($request->all());
-        return redirect()->route('admin.kro.index')->with('success', 'KRO berhasil ditambahkan.');
+        $kro = Kro::create([
+            'kode' => $request->kode,
+            'kode_akun' => $request->kode_akun,
+            'parent_id' => $request->parent_id
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'KRO berhasil ditambahkan',
+            'kro' => $kro
+        ]);
     }
 
     public function edit($id)
@@ -44,22 +54,24 @@ class KroController extends Controller
             'kode_akun' => 'nullable|string|max:255|unique:kros,kode_akun,' . $kro->id,
         ]);
 
-        if ($request->filled('kode')) {
-            $kro->kode = $request->kode;
-        }
-
-        if ($request->filled('kode_akun')) {
-            $kro->kode_akun = $request->kode_akun;
-        }
-
-        $kro->save();
+        $kro->update($request->only('kode', 'kode_akun'));
 
         return response()->json(['success' => true, 'message' => 'KRO berhasil diperbarui']);
     }
 
     public function destroy($id)
     {
-        Kro::findOrFail($id)->delete();
-        return redirect()->route('admin.kro.index')->with('success', 'KRO berhasil dihapus.');
+        $kro = Kro::findOrFail($id);
+        $kro->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'KRO berhasil dihapus'
+        ]);
     }
+
+    public function children() {
+        return $this->hasMany(Kro::class, 'parent_id');
+    }
+
 }

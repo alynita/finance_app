@@ -119,6 +119,7 @@ class KeuanganController extends Controller
     {
         $ppkGroups = PpkGroup::with('pengajuan.user')
                 ->whereIn('status', ['processed', 'adum_approved', 'ppk_approved', 'approved'])
+                ->latest()
                 ->get();
 
         return view('keuangan.laporan', compact('ppkGroups'));

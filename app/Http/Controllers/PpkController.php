@@ -7,6 +7,7 @@ use App\Models\Pengajuan;
 use App\Models\PengajuanItem;
 use App\Models\PpkGroup;
 use App\Models\KroAccount;
+use App\Models\Honor;
 use Illuminate\Support\Facades\DB;
 
 class PpkController extends Controller
@@ -23,8 +24,10 @@ class PpkController extends Controller
 
         // Hitung per kategori untuk card
         $pendingPembelian = $pengajuans->whereIn('jenis_pengajuan', ['pembelian', 'pengadaan', 'kerusakan'])->count();
-        $pendingProsesKeuangan = $pengajuans->where('jenis_pengajuan', 'proses_keuangan')->count();
-        $pendingHonor = $pengajuans->where('jenis_pengajuan', 'honor')->count();
+        $pendingProsesKeuangan = PpkGroup::where('status', 'adum_approved')
+                ->count();
+        $pendingHonor = Honor::where('status','adum_approved')
+                ->count();
 
         // Hitung summary
         $totalPending = $pengajuans->count();
@@ -116,28 +119,22 @@ class PpkController extends Controller
         ]);
     }
 
-    // Approve semua pengajuan langsung tanpa pecah grup
-    public function approveGroup($groupId)
+    // Approve semua grup
+    public function approveAllGroups($pengajuanId)
     {
-        $group = PpkGroup::with('items', 'pengajuan')->findOrFail($groupId);
+        $pengajuan = Pengajuan::with('ppkGroups')->findOrFail($pengajuanId);
 
-        // Set status grup ke pending_pengadaan
-        $group->status = 'pending_pengadaan';
-        $group->save();
-
-        $pengajuan = $group->pengajuan;
-
-        // Cek semua grup sudah approve
-        if($pengajuan->ppkGroups()->where('status','pending_ppk')->count() === 0){
-            $pengajuan->status = 'pending_pengadaan';
-            $pengajuan->ppk_id = auth()->id();
-            $pengajuan->ppk_approved_at = now();
-            $pengajuan->save();
+        foreach($pengajuan->ppkGroups as $group) {
+            if($group->status === 'pending_ppk') {
+                $group->status = 'pending_pengadaan'; // atau 'processed', sesuai logikamu
+                $group->save();
+            }
         }
 
-        return redirect()->route('ppk.show', $pengajuan->id);
+        return redirect()->back()->with('success', 'Semua grup berhasil di-approve!');
     }
 
+    // Approve semua pengajuan langsung tanpa pecah grup
     public function approveAll($pengajuanId)
     {
         $pengajuan = Pengajuan::with('ppkGroups.items')->findOrFail($pengajuanId);

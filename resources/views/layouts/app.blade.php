@@ -256,7 +256,7 @@ body {
 
     @elseif($user->role == 'verifikator')
         <a href="{{ route('verifikator.dashboard') }}"><span>Dashboard</span></a>
-        <a href="{{ route('verifikator.proses') }}"><span>Proses Keuangan</span></a>
+        <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
         <a href="{{ route('verifikator.arsip') }}"><span>Arsip Honor</span></a>
 
 

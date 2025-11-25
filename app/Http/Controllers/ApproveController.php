@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Pengajuan;
 use App\Models\Laporan;
 use App\Models\Profile;
+use App\Models\Honor;
+use App\Models\PpkGroup;
 use Illuminate\Support\Facades\Auth;
 
 class ApproveController extends Controller
@@ -24,9 +26,9 @@ class ApproveController extends Controller
                 ->where('status', 'pending_' . $user->role)
                 ->get();
 
-                // Total pending / approved / rejected
+            // Total pending / approved / rejected
             $totalPending = $pengajuans->count();
-            $totalApproved = Pengajuan::where('status', 'pending_ppk')->count(); // setelah ADUM approve
+            $totalApproved = Pengajuan::where('status', 'approved')->count(); // setelah ADUM approve
             $totalRejected = Pengajuan::where('status', 'rejected_adum')->count();
 
 
@@ -45,11 +47,10 @@ class ApproveController extends Controller
                 ->whereIn('status', ['pending_adum', 'pending_ppk'])
                 ->count();
 
-            $pendingProsesKeuangan = Pengajuan::where('status', 'pending_ppk')
+            $pendingProsesKeuangan = PpkGroup::where('status', 'processed')
                 ->count();
 
-            $pendingHonor = Pengajuan::where('jenis_pengajuan', 'honor')
-                ->whereIn('status', ['pending_adum', 'pending_ppk'])
+            $pendingHonor = Honor::where('status','pending')
                 ->count();
 
         } elseif ($user->role === 'ppk') {

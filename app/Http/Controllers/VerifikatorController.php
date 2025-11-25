@@ -31,13 +31,17 @@ class VerifikatorController extends Controller
             ->where('verifikator_approved_process', 0)
             ->get();
 
-        return view('verifikator.proses_keuangan', compact('pengajuans'));
+        return view('proses.dashboard', compact('pengajuans'));
     }
 
     // Arsip honor
     public function arsipHonor()
     {
-        $honors = Honor::whereIn('status', ['pending', 'ppk_approved'])->get();
+        $perPage = request('perPage', 10);
+
+        $honors = Honor::whereIn('status', ['pending', 'ppk_approved'])
+            ->latest() 
+            ->paginate($perPage);
 
         return view('verifikator.arsip_honor', compact('honors'));
     }
