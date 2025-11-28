@@ -181,6 +181,81 @@ body {
     .sidebar.active { transform: translateX(0); }
     .content { margin-left: 0; }
 }
+
+footer {
+    background-color: var(--green-main);
+    color: var(--white);
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+}
+
+footer a {
+    color: #d6f5e3;
+    text-decoration: none;
+    transition: 0.3s;
+}
+
+footer a:hover {
+    color: var(--white);
+}
+
+@media (max-width: 992px) {
+    .hero {
+        flex-direction: column;
+        text-align: center;
+        padding: 2.5rem 2rem;
+        min-height: auto;
+    }
+
+    .hero-text {
+        max-width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    .hero img {
+        width: 80%;
+    }
+
+    .hero-text h2 {
+        font-size: 1.8rem;
+    }
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.content {
+    flex: 1;
+}
+
+.profile-icon {
+    width: 38px;
+    height: 38px;
+    background: var(--white);
+    color: var(--green-main);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-right: 1rem;
+    cursor: pointer;
+    border: 2px solid var(--green-light);
+    transition: 0.3s;
+}
+
+.profile-icon:hover {
+    background: var(--green-light);
+    color: var(--white);
+}
+
 </style>
 </head>
 <body>
@@ -191,10 +266,20 @@ body {
         <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
         <h1>@yield('header', 'Finance App')</h1>
     </div>
-    <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button type="submit">Logout</button>
-    </form>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+    
+        <!-- IKON PROFIL -->
+        <a href="{{ route('profile.edit') }}" class="profile-icon">
+            &#128100; <!-- ikon orang -->
+        </a>
+
+        <!-- LOGOUT -->
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit">Logout</button>
+        </form>
+    </div>
+
 </div>
 
 <!-- Sidebar -->
@@ -238,7 +323,7 @@ body {
         <a href="{{ route('ppk.dashboard') }}"><span>Dashboard</span></a>
         <a href="{{ route('proses.dashboard') }}"><span>Proses Keuangan</span></a>
         <a href="{{ route('honor.dashboard') }}"><span>Approval Honor</span></a>
-        <a href="{{ route('ppk.approve') }}"><span>Draf</span></a>
+        <a href="{{ route('ppk.approve') }}"><span>Draf Pengajuan</span></a>
 
     @elseif($user->role == 'keuangan')
         <a href="{{ route('keuangan.dashboard') }}"><span>Dashboard</span></a>
@@ -288,6 +373,10 @@ function toggleSidebar(){
     document.getElementById('sidebar').classList.toggle('collapsed');
 }
 </script>
+
+<footer>
+        © 2025 BBPK Jakarta — Sistem Informasi Pengelolaan dan Pengadaan Barang
+</footer>
 
 </body>
 </html>

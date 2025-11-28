@@ -25,30 +25,6 @@
             <p>{{ $totalKro }}</p>
         </div>
     </div>
-
-    <div class="stat-card">
-        <div class="icon">📄</div>
-        <div class="details">
-            <h4>Total Pengajuan</h4>
-            <p>{{ $totalPengajuan }}</p>
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div class="icon">⏳</div>
-        <div class="details">
-            <h4>Pending</h4>
-            <p>{{ $pending }}</p>
-        </div>
-    </div>
-
-    <div class="stat-card">
-        <div class="icon">✅</div>
-        <div class="details">
-            <h4>Approved</h4>
-            <p>{{ $approved }}</p>
-        </div>
-    </div>
 </div>
 @endsection
 

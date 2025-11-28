@@ -6,6 +6,14 @@
 @section('content')
 <div style="max-width:1200px; margin:auto; overflow-x:auto;">
 
+    <!-- Ucapan Selamat Datang -->
+    <div style="background:#eaf3ea; padding:1.5rem; border-radius:10px; margin-bottom:20px; border-left:6px solid #2e7d32;">
+        <h2 style="margin:0; color:#1b5e20;">Selamat datang, {{ Auth::user()->name }}👋</h2>
+        <p style="margin:5px 0 0 0; color:#333;">
+            Proses Dana Pengajuan dengan mudah dan efisien.
+        </p>
+    </div>
+
     @if(session('success'))
         <div style="background-color:#d4edda; color:#155724; padding:10px; margin-bottom:10px; border-radius:5px;">
             {{ session('success') }}

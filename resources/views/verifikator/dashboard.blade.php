@@ -6,6 +6,14 @@
 @section('content')
 <div style="max-width:1200px; margin:auto;">
 
+<!-- Ucapan Selamat Datang -->
+    <div style="background:#eaf3ea; padding:1.5rem; border-radius:10px; margin-bottom:20px; border-left:6px solid #2e7d32;">
+        <h2 style="margin:0; color:#1b5e20;">Selamat datang, {{ Auth::user()->name }}👋</h2>
+        <p style="margin:5px 0 0 0; color:#333;">
+            Proses Persetujuan dengan mudah dan efisien.
+        </p>
+    </div>
+
     <div style="display:flex; gap:20px; margin-bottom:20px;">
         <div style="flex:1; padding:20px; background:#f1f1f1; border-radius:5px; text-align:center;">
             <h3>Pengajuan Proses Keuangan</h3>

@@ -15,6 +15,8 @@ class PengadaanController extends Controller
             ->with('pengajuan.user', 'items')
             ->get();
 
+            $user = auth()->user();
+
         return view('pengadaan.dashboard', compact('groups'));
     }
 

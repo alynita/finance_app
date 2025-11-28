@@ -19,8 +19,10 @@ class PengajuanController extends Controller
         }
 
         $pengajuans = Pengajuan::with('items', 'user')
-                        ->where('user_id', $user->id)
-                        ->get();
+                ->where('user_id', $user->id)
+                ->where('status', '!=', 'approved')
+                ->get();
+
 
         $pending = $pengajuans->whereIn('status', ['pending_adum', 'pending_ppk', 'pending_timker_1','pending_timker_2','pending_timker_3','pending_timker_4','pending_timker_5','pending_timker_6'])->count();
         $approved = $pengajuans->where('status', 'approved')->count();

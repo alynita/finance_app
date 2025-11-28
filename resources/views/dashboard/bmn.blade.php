@@ -1,11 +1,17 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard BMN')
-@section('header', 'Dashboard BMN')
+@section('title', 'Dashboard Pegawai')
+@section('header', 'Dashboard Pegawai')
 
 @section('content')
 <div>
-    <h1>Selamat datang, {{ $user->name }}</h1>
+    <!-- Ucapan Selamat Datang -->
+    <div style="background:#eaf3ea; padding:1.5rem; border-radius:10px; margin-bottom:20px; border-left:6px solid #2e7d32;">
+        <h2 style="margin:0; color:#1b5e20;">Selamat datang, {{ $user->name }} 👋</h2>
+        <p style="margin:5px 0 0 0; color:#333;">
+            Buat Pengajuan dan pantau status pengajuan dengan mudah dan efisien.
+        </p>
+    </div>
 
     <div style="display:flex; gap:1rem; margin:1rem 0;">
         <div class="card pending" style="flex:1;">
@@ -64,6 +70,7 @@
                 <th>Judul Pengajuan</th>
                 <th>Tanggal Pengajuan</th>
                 <th>Status Akhir</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -73,13 +80,29 @@
                     <td>{{ $pengajuan->nama_kegiatan }}</td>
                     <td>{{ $pengajuan->created_at->format('d-m-Y') }}</td>
                     <td>
-                        @if($pengajuan->status == 'approved')
-                            Approved
-                        @elseif(str_starts_with($pengajuan->status, 'rejected'))
-                            Rejected
-                        @else
-                            Pending
-                        @endif
+                        @php
+                            $statusMap = [
+                                'pending_adum'        => 'Pending ADUM',
+                                'pending_ppk'         => 'Pending PPK',
+                                'pending_pengadaan'   => 'Pending Pengadaan',
+                                'submitted_keuangan'  => 'Submitted Keuangan',
+                                'processed'           => 'Diproses Keuangan',
+                                'adum_approved'       => 'Approved ADUM',
+                                'approve_ppk'         => 'Approved PPK',
+                                'approved'            => 'Approved',
+                            ];
+
+                            $finalStatus = $statusMap[$pengajuan->status] ?? 'Unknown';
+                        @endphp
+
+                        {{ $finalStatus }}
+                    </td>
+                    <td>
+                        <a href="{{ route('pegawai.pengajuan.show', $pengajuan->id) }}"
+                            style="background:#3498db; color:white; padding:5px 10px; 
+                                    text-decoration:none; border-radius:3px;">
+                            Lihat Detail
+                        </a>
                     </td>
                 </tr>
             @empty

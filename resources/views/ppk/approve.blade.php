@@ -1,70 +1,65 @@
 @extends('layouts.app')
 
-@section('title', 'Draf PPK')
-@section('header', 'Grup PPK yang Sudah Dibuat')
+@section('title', 'Daftar Pengajuan')
+@section('header', 'Daftar Pengajuan')
 
 @section('content')
-<div style="max-width:1000px; margin:auto;">
-    <h3 class="mb-3">Draf</h3>
+@if(session('success'))
+    <div style="background-color: #d4edda; color: #155724; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+        {{ session('success') }}
+    </div>
+@endif
 
-    @if($groups->isEmpty())
-        <p>Tidak ada grup yang menunggu persetujuan.</p>
-    @else
-        <table style="width:100%; border-collapse: collapse;" border="1">
-            <thead style="background:#f2f2f2;">
-                <tr>
-                    <th>No</th>
-                    <th>Nama Kegiatan</th>
-                    <th>Pengaju</th>
-                    <th>Nama Barang</th>
-                    <th>Volume</th>
-                    <th>KRO / Kode Akun</th>
-                    <th>Ongkos Kirim</th>
-                    <th>Jumlah Dana</th>
-                    <th>Link / Foto</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($groups as $i => $group)
-                    @php
-                        $pengajuan = $group->pengajuan;
-                    @endphp
-                    @foreach($group->items as $j => $item)
-                        <tr>
-                            @if($j === 0)
-                                <td rowspan="{{ $group->items->count() }}" style="text-align:center; font-weight:bold;">{{ $i + 1 }}</td>
-                                <td rowspan="{{ $group->items->count() }}">{{ $pengajuan->nama_kegiatan ?? '-' }}</td>
-                                <td rowspan="{{ $group->items->count() }}">{{ $pengajuan->user->name ?? '-' }}</td>
-                            @endif
+<h2 style="margin-bottom: 1rem;">Daftar Pengajuan</h2>
 
-                            <td>{{ $item->nama_barang ?? '-' }}</td>
-                            <td style="text-align:center;">{{ $item->volume ?? '-' }}</td>
-                            <td>{{ $item->kro ?? '-' }}</td>
-                            <td style="text-align:right;">{{ number_format($item->ongkos_kirim ?? 0,0,',','.') }}</td>
-                            <td style="text-align:right;">{{ number_format($item->jumlah_dana_pengajuan ?? 0,0,',','.') }}</td>
-                            <td>
-                                @if($item->link)
-                                    <a href="{{ $item->link }}" target="_blank">Link</a>
-                                @elseif($item->foto)
-                                    <a href="{{ $item->foto }}" target="_blank">Foto</a>
-                                @else
-                                    -
-                                @endif
-                            </td>
+<!-- Pilih jumlah entri per halaman -->
+    <form method="GET" action="{{ route(auth()->user()->role . '.approve') }}" style="margin-bottom:15px;">
+        <label for="perPage" style="font-weight:bold; margin-right:10px;">Tampilkan:</label>
+        <select name="perPage" id="perPage" onchange="this.form.submit()" style="padding:4px;">
+            @foreach([10, 25, 50, 100] as $size)
+                <option value="{{ $size }}" {{ request('perPage', 10) == $size ? 'selected' : '' }}>
+                    {{ $size }}
+                </option>
+            @endforeach
+        </select>
+        <span>entri</span>
+    </form>
 
-                            @if($j === 0)
-                                <td rowspan="{{ $group->items->count() }}" style="text-align:center;">
-                                    <span style="padding:5px 10px; background:#17a2b8; color:white; border-radius:5px;">
-                                        {{ ucfirst($group->status) }}
-                                    </span>
-                                </td>
-                            @endif
-                        </tr>
-                    @endforeach
-                @endforeach
-            </tbody>
-        </table>
-    @endif
-</div>
+{{-- Tabel Daftar Pengajuan --}}
+<table border="1" cellpadding="10" cellspacing="0" 
+    style="width:100%; border-collapse: collapse; margin-top: 1rem;">
+    <thead style="background-color:#f2f2f2;">
+        <tr>
+            <th>No</th>
+            <th>Waktu Pengajuan</th>
+            <th>Nama Pegawai</th>
+            <th>Judul Pengajuan</th>
+            <th>Status Terakhir</th>
+            <th>Detail</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($pengajuans as $index => $pengajuan)
+            <tr>
+                <td>{{ $index + 1 }}</td>
+                <td>{{ $pengajuan->created_at->format('d M Y H:i') }}</td>
+                <td>{{ $pengajuan->user->name }}</td>
+                <td>{{ $pengajuan->nama_kegiatan ?? '-' }}</td>
+                <td>{{ ucfirst(str_replace('_',' ', $pengajuan->status)) }}</td>
+                <td>
+                    <a href="{{ route('pegawai.pengajuan.show', $pengajuan->id) }}"
+                        style="background:#3498db; color:white; padding:5px 10px; 
+                                text-decoration:none; border-radius:3px;">
+                        Lihat Detail
+                    </a>
+                </td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="5" style="text-align:center;">Belum ada data arsip</td>
+            </tr>
+        @endforelse
+    </tbody>
+</table>
+
 @endsection

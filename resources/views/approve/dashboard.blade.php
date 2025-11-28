@@ -6,7 +6,13 @@
 @section('content')
 <div style="max-width:1000px; margin:auto;">
 
-    <h2>Selamat datang, {{ $user->name }}</h2>
+    <!-- Ucapan Selamat Datang -->
+    <div style="background:#eaf3ea; padding:1.5rem; border-radius:10px; margin-bottom:20px; border-left:6px solid #2e7d32;">
+        <h2 style="margin:0; color:#1b5e20;">Selamat datang, {{ Auth::user()->name }}👋</h2>
+        <p style="margin:5px 0 0 0; color:#333;">
+            Proses Persetujuan Pengajuan dengan mudah dan efisien.
+        </p>
+    </div>
 
     {{-- CARD SUMMARY --}}
     @if($user->role === 'adum')

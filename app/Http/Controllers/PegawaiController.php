@@ -19,11 +19,14 @@ class PegawaiController extends Controller
 
         // Hitung status
         $pending = $pengajuans->whereIn('status', [
-                            'pending_adum',
-                            'pending_ppk',
-                            'pending_pengadaan',
-                            'submitted_keuangan'
-                        ])->count();
+            'pending_adum',
+            'pending_ppk',
+            'pending_pengadaan',
+            'submitted_keuangan',
+            'processed',
+            'adum_approved',
+            'approve_ppk'
+        ])->count();
 
         // approved tetap dihitung tapi tidak ditampilkan di tabel
         $approved = Pengajuan::where('user_id', $user->id)

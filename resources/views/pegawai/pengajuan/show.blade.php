@@ -166,9 +166,5 @@
         </div>
     </div>
 
-    <a href="{{ route('pegawai.daftar-pengajuan') }}" 
-        style="display:inline-block; margin-top:1rem; padding:0.5rem 1rem; background:#6c757d; color:white; border-radius:4px; text-decoration:none;">
-        Kembali
-    </a>
 </div>
 @endsection

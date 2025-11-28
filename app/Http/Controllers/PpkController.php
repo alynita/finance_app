@@ -204,12 +204,15 @@ class PpkController extends Controller
 
     public function approvedList()
     {
+
+        $perPage = request('perPage', 10);
+
         // Ambil grup-grup yang sudah diapprove PPK
-        $groups = PpkGroup::where('status', 'pending_pengadaan')
-                    ->with('pengajuan.user', 'items')
-                    ->get();
+        $pengajuans = Pengajuan::with('items', 'user')
+                ->where('ppk_id')
+                ->latest()
+                ->paginate($perPage);
 
-        return view('ppk.approve', compact('groups'));
+        return view('ppk.approve', compact('pengajuans'));
     }
-
 }
