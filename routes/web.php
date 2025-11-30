@@ -208,6 +208,8 @@ Route::prefix('verifikator')->middleware(['auth'])->group(function() {
     Route::get('/proses-keuangan', [VerifikatorController::class, 'prosesKeuangan'])->name('proses.dashboard');
     Route::get('/arsip-honor', [VerifikatorController::class, 'arsipHonor'])->name('verifikator.arsip');
     Route::get('/arsip-honor/{id}', [VerifikatorController::class, 'detailHonor'])->name('verifikator.honor.detail');
+    Route::get('/honor/{id}/pdf', [VerifikatorController::class, 'downloadHonorPdf'])
+        ->name('verifikator.honor.download.pdf');
     
     Route::post('/proses-keuangan/approve/{id}', [VerifikatorController::class, 'approve'])->name('verifikator.proses.approve');
     Route::post('/proses-keuangan/reject/{id}', [VerifikatorController::class, 'reject'])->name('verifikator.proses.reject');

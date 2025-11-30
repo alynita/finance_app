@@ -39,6 +39,10 @@
 @php
 $totalPajak = 0;
 $totalDiterima = 0;
+
+// CEK APAKAH ADA PAJAK BARU
+$firstItem = $group->items->first();
+$hasPajakBaru = !empty($firstItem->nama_pajak_baru) && ($firstItem->hasil_pajak_baru ?? 0) > 0;
 @endphp
 
 <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse:collapse; margin-top:1rem;">
@@ -53,15 +57,18 @@ $totalDiterima = 0;
             <th>PPH 21</th>
             <th>PPH 22</th>
             <th>PPH 23</th>
-            <th>
-                {{ $group->items->first()->nama_pajak_baru ?? 'Pajak Baru (Rp)' }}
-            </th>
+
+            @if($hasPajakBaru)
+                <th>{{ $firstItem->nama_pajak_baru }}</th>
+            @endif
+
             <th>PPN</th>
             <th>Dibayarkan</th>
             <th>No Rekening</th>
             <th>Bank</th>
         </tr>
     </thead>
+
     <tbody>
         @foreach($group->items as $index => $item)
         @php
@@ -69,10 +76,21 @@ $totalDiterima = 0;
             $pph22 = $item->pph22 ?? 0;
             $pph23 = $item->pph23 ?? 0;
             $ppn   = $item->ppn ?? 0;
-            $hasilPajakBaru = $item->hasil_pajak_baru ?? 0; // ambil hasil pajak baru
-            $dibayarkan = $item->dibayarkan ?? ($item->jumlah_dana_pengajuan - ($pph21+$pph22+$pph23+$ppn+$hasilPajakBaru));
 
-            $totalPajak += ($pph21 + $pph22 + $pph23 + $ppn + $hasilPajakBaru); // tambahkan hasil_pajak_baru
+            // jika tidak ada pajak baru → otomatis jadi 0
+            $hasilPajakBaru = $hasPajakBaru ? ($item->hasil_pajak_baru ?? 0) : 0;
+
+            $dibayarkan = $item->dibayarkan ?? (
+                $item->jumlah_dana_pengajuan
+                - ($pph21 + $pph22 + $pph23 + $ppn + $hasilPajakBaru)
+            );
+
+            // hitung total pajak — lebih aman
+            $totalPajak += ($pph21 + $pph22 + $pph23 + $ppn);
+            if($hasPajakBaru) {
+                $totalPajak += $hasilPajakBaru;
+            }
+
             $totalDiterima += $dibayarkan;
         @endphp
 
@@ -83,10 +101,15 @@ $totalDiterima = 0;
             <td>{{ $item->detail_akun ?? 'Tidak ada detail akun' }}</td>
             <td>{{ $item->uraian ?? 'Tidak ada uraian' }}</td>
             <td>{{ number_format($item->jumlah_dana_pengajuan, 0, ',', '.') }}</td>
+
             <td>{{ number_format($pph21, 0, ',', '.') }}</td>
             <td>{{ number_format($pph22, 0, ',', '.') }}</td>
             <td>{{ number_format($pph23, 0, ',', '.') }}</td>
-            <td>{{ number_format($item->hasil_pajak_baru, 0, ',', '.') }}</td>
+
+            @if($hasPajakBaru)
+                <td>{{ number_format($hasilPajakBaru, 0, ',', '.') }}</td>
+            @endif
+
             <td>{{ number_format($ppn, 0, ',', '.') }}</td>
             <td>{{ number_format($dibayarkan, 0, ',', '.') }}</td>
             <td>{{ $item->no_rekening ?? '-' }}</td>
@@ -95,6 +118,7 @@ $totalDiterima = 0;
         @endforeach
     </tbody>
 </table>
+
 
 {{-- Total Pajak & Diterima --}}
 <div style="margin-top:1rem; padding:10px; border:1px solid #000; border-radius:5px; width:300px;">

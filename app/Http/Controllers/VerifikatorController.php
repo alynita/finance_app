@@ -7,6 +7,7 @@ use App\Models\PpkGroup;
 use App\Models\Honor;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class VerifikatorController extends Controller
 {
@@ -55,6 +56,21 @@ class VerifikatorController extends Controller
         $bendahara = User::where('role', 'bendahara')->first();
 
         return view('verifikator.detail_honor', compact('honor', 'bendahara'));
+    }
+
+    // ================= DOWNLOAD PDF HONOR =================
+    public function downloadHonorPDF($id)
+    {
+        // Ambil honor beserta relasinya
+        $honors = Honor::with(['details', 'adum', 'ppk'])->findOrFail($id);
+
+        // Ambil bendahara
+        $verifikator = User::where('role', 'verifikator')->first();
+
+        $pdf = Pdf::loadView('verifikator.honor_pdf', compact('honors', 'verifikator'))
+            ->setPaper('A4', 'landscape');
+
+        return $pdf->download('honor_'.$honors->id.'.pdf');
     }
 
     // Approve proses keuangan

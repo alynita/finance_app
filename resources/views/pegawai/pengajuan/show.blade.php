@@ -119,32 +119,55 @@
 
     <!-- Tanda Tangan -->
     @php
-        $mengetahui_user = $pengajuan->mengetahui ?? $pengajuan->adum;
+        $status = strtolower($pengajuan->status ?? '');
+
+        $isApprovedMengetahui = in_array($status, [
+            'pending_ppk',
+            'approved_mengetahui',
+            'approved_adum'
+        ]);
+
+        $isRejectedMengetahui = in_array($status, [
+            'rejected_mengetahui',
+            'rejected_adum'
+        ]);
+
+        $mengetahui_user = $pengajuan->mengetahui_id 
+            ? $pengajuan->mengetahui 
+            : $pengajuan->adum;
     @endphp
+
     <div style="display:flex; justify-content:space-between; margin-top:100px;">
-        <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center;">
-            <div>MENGETAHUI</div>
-            <div>
-                {{ $pengajuan->mengetahui_jabatan 
-                    ? strtoupper(str_replace('_', ' ', $pengajuan->mengetahui_jabatan)) 
-                    : ($mengetahui_user->role ? strtoupper($mengetahui_user->role) : 'Role') 
-                }}
-            </div>
+
+    {{-- MENGETAHUI --}}
+    <div style="flex:1; text-align:center;">
+        <div>MENGETAHUI</div>
+            <div>{{ strtoupper($mengetahui_user->role ?? 'TIMKER') }}</div>
+
             <div style="margin-top:60px;">
-                @if($pengajuan->mengetahui_id || $pengajuan->adum_id)
+                @if($isApprovedMengetahui)
                     <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
                     {{ $mengetahui_user->name ?? '-' }}<br>
                     NIP. {{ $mengetahui_user->nip ?? '-' }}<br>
-                    <small>{{ \Carbon\Carbon::parse($pengajuan->mengetahui_approved_at ?? $pengajuan->adum_approved_at)->format('d M Y H:i') }}</small>
+                    <small>{{ $pengajuan->mengetahui_approved_at ?? $pengajuan->adum_approved_at }}</small>
+
+                @elseif($isRejectedMengetahui)
+                    <div style="color:red; font-weight:bold;">REJECTED</div>
+                    {{ $mengetahui_user->name ?? '-' }}<br>
+                    NIP. {{ $mengetahui_user->nip ?? '-' }}<br>
+                    <small>{{ $pengajuan->mengetahui_approved_at ?? $pengajuan->adum_approved_at }}</small>
+
                 @else
                     <em style="color:red;">Tanda tangan menunggu approve</em>
                 @endif
             </div>
         </div>
 
-        <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center;"> 
+        {{-- MENYETUJUI --}}
+        <div style="flex:1; text-align:center;">
             <div>MENYETUJUI</div>
             <div>Pejabat Pembuat Komitmen</div>
+
             <div style="margin-top:60px;">
                 @if($pengajuan->ppk_id)
                     <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
@@ -157,14 +180,18 @@
             </div>
         </div>
 
-        <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center;">
+        {{-- PENANGGUNG JAWAB --}}
+        <div style="flex:1; text-align:center;">
             <div>PENANGGUNG JAWAB</div>
+
             <div style="margin-top:60px;">
                 {{ $pengajuan->user->name ?? 'Nama Penanggung Jawab' }}<br>
                 NIP. {{ $pengajuan->user->nip ?? '-' }}
             </div>
         </div>
+
     </div>
+
 
 </div>
 @endsection

@@ -54,8 +54,13 @@
                 <td>{{ \Carbon\Carbon::parse($h->waktu)->format('d-m-Y') }}</td>
                 <td>{{ $h->user->name ?? '-' }}</td>
                 <td>
-                    <a href="{{ route('verifikator.honor.detail', $h->id) }}">
+                    <a href="{{ route('verifikator.honor.detail', $h->id) }}"
+                        style="padding:4px 8px; background:#007bff; color:white; border-radius:4px; text-decoration:none; margin-right:5px;">
                         Detail
+                    </a>
+                    <a href="{{ route('verifikator.honor.download.pdf', $h->id ) }}"
+                        style="background:green; color:white; padding:0.3rem 0.6rem; border-radius:4px; text-decoration:none;">
+                        Download PDF
                     </a>
                 </td>
             </tr>
