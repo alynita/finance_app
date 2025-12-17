@@ -8,6 +8,8 @@ use App\Models\PengajuanItem;
 use App\Models\PpkGroup;
 use App\Models\KroAccount;
 use App\Models\Honor;
+use App\Helpers\NotifikasiHelper;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
 class PpkController extends Controller
@@ -49,15 +51,46 @@ class PpkController extends Controller
 
     public function show($id)
     {
-        $pengajuan = Pengajuan::with('items', 'user', 'ppkGroups.items')->findOrFail($id);
+        $pengajuan = Pengajuan::with([
+            'items' => function ($q) {
+                $q->whereIn('status_persediaan', ['TIDAK_ADA', 'SEBAGIAN']);
+            },
+            'user',
+            'ppkGroups.items'
+        ])->findOrFail($id);
 
-        // Ambil semua KRO dari DB
+        /* ================================
+        * HITUNG DATA TAMPILAN UNTUK PPK
+        * ================================ */
+        foreach ($pengajuan->items as $item) {
+
+            // default
+            $item->volume_tampil = $item->volume;
+            $item->jumlah_dana_tampil = $item->jumlah_dana_pengajuan;
+
+            if ($item->status_persediaan === 'SEBAGIAN') {
+
+                $sisa = max(
+                    $item->volume - ($item->jumlah_tersedia ?? 0),
+                    0
+                );
+
+                $item->volume_tampil = $sisa;
+                $item->jumlah_dana_tampil = $sisa * ($item->harga_satuan ?? 0);
+            }
+
+            if ($item->status_persediaan === 'TIDAK_ADA') {
+                $item->volume_tampil = $item->volume;
+                $item->jumlah_dana_tampil = $item->jumlah_dana_pengajuan;
+            }
+
+            $item->kro_full = $item->kro ?? '-';
+        }
+
+        // Ambil semua KRO
         $kroData = DB::table('kro')->get();
-
-        // Buat nested array
         $kroAll = $this->buildTree($kroData);
 
-        // Kirim juga $kroAccounts ke view
         return view('ppk.show', compact('pengajuan', 'kroAll'));
     }
 
@@ -119,26 +152,37 @@ class PpkController extends Controller
         ]);
     }
 
-    // Approve semua grup
-    public function approveAllGroups($pengajuanId)
+    public function updateCatatan(Request $request, $id)
     {
-        $pengajuan = Pengajuan::with('ppkGroups')->findOrFail($pengajuanId);
+        $request->validate([
+            'catatan_ppk' => 'nullable|string|max:255',
+        ]);
 
-        foreach($pengajuan->ppkGroups as $group) {
-            if($group->status === 'pending_ppk') {
-                $group->status = 'pending_pengadaan'; // atau 'processed', sesuai logikamu
-                $group->save();
+        $item = PengajuanItem::findOrFail($id);
+        $item->catatan_ppk = $request->catatan_ppk;
+        $item->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Catatan berhasil diupdate',
+            'catatan_ppk' => $item->catatan_ppk
+        ]);
+}
+
+    // Approve semua grup
+    public function approveAll($pengajuanId)
+    {
+        $pengajuan = Pengajuan::with('items', 'ppkGroups.items')->findOrFail($pengajuanId);
+
+        $catatanPpk = request()->input('catatan_ppk', []); // ambil input dari form
+
+        foreach ($pengajuan->items as $item) {
+            if (isset($catatanPpk[$item->id])) {
+                $item->catatan_ppk = $catatanPpk[$item->id];
+                $item->save();
             }
         }
 
-        return redirect()->back()->with('success', 'Semua grup berhasil di-approve!');
-    }
-
-    // Approve semua pengajuan langsung tanpa pecah grup
-    public function approveAll($pengajuanId)
-    {
-        $pengajuan = Pengajuan::with('ppkGroups.items')->findOrFail($pengajuanId);
-        
         if($pengajuan->ppkGroups->count() === 0){
             $group = PpkGroup::create([
                 'pengajuan_id' => $pengajuan->id,
@@ -158,6 +202,15 @@ class PpkController extends Controller
         $pengajuan->ppk_approved_at = now();
         $pengajuan->save();
 
+        $nextRole = 'pengadaan';
+        $pesan = "Pengajuan ID {$pengajuan->id} telah disetujui oleh PPK. Silakan proses selanjutnya.";
+
+        if (app()->environment('local')) {
+            \Log::info("Email NOT sent: {$pesan} -> {$nextRole}");
+        } else {
+            NotifikasiHelper::kirim($pengajuan, $nextRole, $pesan);
+        }
+
         return redirect()->route('ppk.show', $pengajuan->id);
     }
 
@@ -168,6 +221,7 @@ class PpkController extends Controller
         $groupNames = $request->group_name;
         $groupsItems = $request->groups;
 
+        // catatan PPK sudah ada di item, jadi nggak perlu ambil lagi dari $request
         foreach ($groupNames as $index => $name) {
             $group = PpkGroup::create([
                 'pengajuan_id' => $pengajuan->id,
@@ -176,17 +230,21 @@ class PpkController extends Controller
             ]);
 
             if (isset($groupsItems[$index])) {
-                // Ambil ulang item dari DB agar KRO terbarunya ikut
                 $itemIds = $groupsItems[$index];
+
+                // pastikan flat array
+                $itemIds = is_array($itemIds) ? Arr::flatten($itemIds) : [$itemIds];
+
                 $items = \App\Models\PengajuanItem::whereIn('id', $itemIds)->get();
 
-                // Pastikan data KRO tersimpan di pivot atau log
                 foreach ($items as $item) {
                     $group->items()->attach($item->id);
+                    // Catatan PPK sudah ada di item, tidak perlu diubah
                 }
             }
         }
 
+        // Jika ada flag approve all, langsung approve grup
         if ($request->approve_all) {
             foreach ($pengajuan->ppkGroups as $group) {
                 $group->status = 'pending_pengadaan';
@@ -197,6 +255,44 @@ class PpkController extends Controller
             $pengajuan->ppk_id = auth()->id();
             $pengajuan->ppk_approved_at = now();
             $pengajuan->save();
+        }
+
+        return redirect()->route('ppk.show', $pengajuan->id);
+    }
+
+    public function approveAllGroups(Request $request, $pengajuanId)
+    {
+        $pengajuan = Pengajuan::with('ppkGroups.items')->findOrFail($pengajuanId);
+
+        $groupsCatatan = $request->input('groups_catatan', []); // ambil catatan PPK jika ada dari request
+
+        foreach ($pengajuan->ppkGroups as $group) {
+            if ($group->status === 'pending_ppk') {
+                // simpan catatan PPK ke setiap item sebelum approve
+                foreach ($group->items as $item) {
+                    if (isset($groupsCatatan[$group->id][$item->id])) {
+                        $item->catatan_ppk = $groupsCatatan[$group->id][$item->id];
+                        $item->save();
+                    }
+                }
+
+                $group->status = 'pending_pengadaan';
+                $group->save();
+            }
+        }
+
+        $pengajuan->status = 'pending_pengadaan';
+        $pengajuan->ppk_id = auth()->id();
+        $pengajuan->ppk_approved_at = now();
+        $pengajuan->save();
+
+        $nextRole = 'pengadaan';
+        $pesan = "Pengajuan ID {$pengajuan->id} telah disetujui oleh PPK. Silakan proses selanjutnya.";
+
+        if (app()->environment('local')) {
+            \Log::info("Email NOT sent: {$pesan} -> {$nextRole}");
+        } else {
+            NotifikasiHelper::kirim($pengajuan, $nextRole, $pesan);
         }
 
         return redirect()->route('ppk.show', $pengajuan->id);

@@ -67,35 +67,94 @@
         <thead style="background:#eee;">
             <tr>
                 <th>No</th>
+                <th>Nomor</th>
                 <th>Judul Pengajuan</th>
                 <th>Tanggal Pengajuan</th>
                 <th>Status Akhir</th>
                 <th>Aksi</th>
+                <th>Follow Up</th>
             </tr>
         </thead>
         <tbody>
             @forelse($pengajuans as $index => $pengajuan)
                 <tr>
                     <td>{{ $index + 1 }}</td>
+                    <td>{{ $pengajuan->kode_pengajuan }}</td>
                     <td>{{ $pengajuan->nama_kegiatan }}</td>
                     <td>{{ $pengajuan->created_at->format('d-m-Y') }}</td>
                     <td>
                         @php
-                            $statusMap = [
-                                'pending_adum'        => 'Pending ADUM',
-                                'pending_ppk'         => 'Pending PPK',
-                                'pending_pengadaan'   => 'Pending Pengadaan',
-                                'submitted_keuangan'  => 'Submitted Keuangan',
-                                'processed'           => 'Diproses Keuangan',
-                                'adum_approved'       => 'Approved ADUM',
-                                'approve_ppk'         => 'Approved PPK',
-                                'approved'            => 'Approved',
-                            ];
+                            $statusLabel = '';
+                            $bg = '#eee';
+                            $color = '#333';
+                            $icon = '⏳';
 
-                            $finalStatus = $statusMap[$pengajuan->status] ?? 'Unknown';
+                            switch ($pengajuan->status) {
+                                case 'menunggu_persediaan':
+                                    $statusLabel = 'Dicek Persediaan';
+                                    $bg = '#fff3cd';
+                                    $color = '#856404';
+                                    $icon = '📦';
+                                    break;
+
+                                case 'pending_adum':
+                                    $statusLabel = 'Menunggu ADUM';
+                                    $bg = '#e3f2fd';
+                                    $color = '#0d47a1';
+                                    $icon = '📝';
+                                    break;
+
+                                case 'pending_ppk':
+                                    $statusLabel = 'Menunggu PPK';
+                                    $bg = '#ede7f6';
+                                    $color = '#4527a0';
+                                    $icon = '✍️';
+                                    break;
+
+                                case 'pending_pengadaan':
+                                    $statusLabel = 'Proses Pengadaan';
+                                    $bg = '#e1f5fe';
+                                    $color = '#0277bd';
+                                    $icon = '🏗️';
+                                    break;
+
+                                case 'submitted_keuangan':
+                                    $statusLabel = 'Diajukan ke Keuangan';
+                                    $bg = '#f3e5f5';
+                                    $color = '#6a1b9a';
+                                    $icon = '💰';
+                                    break;
+
+                                case 'approved':
+                                    $statusLabel = 'Disetujui';
+                                    $bg = '#e8f5e9';
+                                    $color = '#2e7d32';
+                                    $icon = '✅';
+                                    break;
+
+                                case 'rejected':
+                                    $statusLabel = 'Ditolak';
+                                    $bg = '#fdecea';
+                                    $color = '#c62828';
+                                    $icon = '❌';
+                                    break;
+
+                                default:
+                                    $statusLabel = ucfirst(str_replace('_', ' ', $pengajuan->status));
+                            }
                         @endphp
 
-                        {{ $finalStatus }}
+                        <span style="
+                            display:inline-block;
+                            padding:6px 12px;
+                            border-radius:20px;
+                            font-size:13px;
+                            font-weight:600;
+                            background:{{ $bg }};
+                            color:{{ $color }};
+                        ">
+                            {{ $icon }} {{ $statusLabel }}
+                        </span>
                     </td>
                     <td>
                         <a href="{{ route('pegawai.pengajuan.show', $pengajuan->id) }}"
@@ -103,6 +162,67 @@
                                     text-decoration:none; border-radius:3px;">
                             Lihat Detail
                         </a>
+                    </td>
+                    <td style="text-align:center;">
+                    @php
+                        $userTarget = null;
+                        $jabatan = null;
+
+                        switch ($pengajuan->status) {
+                            case 'menunggu_persediaan':
+                                $userTarget = \App\Models\User::where('role', 'persediaan')->first();
+                                $jabatan = 'Petugas Persediaan';
+                                break;
+
+                            case 'pending_adum':
+                                $userTarget = \App\Models\User::where('role', 'adum')->first();
+                                $jabatan = 'ADUM';
+                                break;
+
+                            case 'pending_ppk':
+                                $userTarget = \App\Models\User::where('role', 'ppk')->first();
+                                $jabatan = 'PPK';
+                                break;
+
+                            case 'pending_pengadaan':
+                                $userTarget = \App\Models\User::where('role', 'pengadaan')->first();
+                                $jabatan = 'Pengadaan';
+                                break;
+
+                            case 'submitted_keuangan':
+                                $userTarget = \App\Models\User::where('role', 'keuangan')->first();
+                                $jabatan = 'Keuangan';
+                                break;
+                        }
+
+                        $waNumber = null;
+                        if ($userTarget && $userTarget->no_hp) {
+                            $waNumber = preg_replace('/^0/', '62', $userTarget->no_hp);
+                        }
+
+                        $pesan = urlencode(
+                            "Yth. Bapak/Ibu {$jabatan}\n\n".
+                            "Mohon izin mengingatkan,\n".
+                            "terdapat pengajuan dengan nomor:\n\n".
+                            "{$pengajuan->kode_pengajuan}\n".
+                            "{$pengajuan->nama_kegiatan}\n\n".
+                            "yang saat ini berstatus:\n".
+                            strtoupper(str_replace('_',' ', $pengajuan->status))."\n\n".
+                            "Mohon kiranya dapat ditindaklanjuti.\n".
+                            "Atas perhatian Bapak/Ibu kami ucapkan terima kasih.\n\n".
+                            "Hormat kami,\n{$user->name}"
+                        );
+                    @endphp
+
+                    @if($waNumber)
+                        <a href="https://wa.me/{{ $waNumber }}?text={{ $pesan }}"
+                        target="_blank"
+                        style="background:#25D366; color:white; padding:5px 10px; border-radius:4px; text-decoration:none;">
+                            💬 WA
+                        </a>
+                    @else
+                        -
+                    @endif
                     </td>
                 </tr>
             @empty

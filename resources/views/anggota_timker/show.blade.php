@@ -94,52 +94,87 @@
     </table>
 
     <!-- Tanda Tangan -->
-    @php
-        $mengetahui_user = $pengajuan->mengetahui ?? $pengajuan->adum;
-    @endphp
-
     <div style="display:flex; justify-content:space-between; margin-top:100px;">
 
-        <!-- MENGETAHUI -->
+        {{-- ================= PERSEDIAAN ================= --}}
+        @php
+            $persediaanUser = $pengajuan->persediaan;
+        @endphp
+
+        <div style="flex:1; text-align:center;">
+            <div>PERSEDIAAN</div>
+
+            <div style="margin-top:60px;">
+                @if($pengajuan->persediaan_approved_at)
+                    <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
+                    <div>{{ $pengajuan->persediaan->name }}</div>
+                    <div>NIP. {{ $pengajuan->persediaan->nip }}</div>
+                    <small>{{ $pengajuan->persediaan_approved_at }}</small>
+                @else
+                    <em style="color:red;">Menunggu konfirmasi Persediaan</em>
+                @endif
+            </div>
+        </div>
+
+        {{-- ================= MENGETAHUI ================= --}}
+        @php
+            $rolePembuat = $pengajuan->user->role;
+            $mengetahui_user = null;
+
+            // 1. Jika pembuat adalah anggota timker → mengetahui = ketua timker
+            if (str_starts_with($rolePembuat, 'anggota_timker_')) {
+                $index = str_replace('anggota_timker_', '', $rolePembuat);
+                $mengetahui_user = \App\Models\User::where('role', 'timker_' . $index)->first();
+            }
+
+            // 2. Jika pembuat adalah ketua timker → mengetahui = ketua timker itu sendiri
+            elseif (str_starts_with($rolePembuat, 'timker_')) {
+                $mengetahui_user = \App\Models\User::where('role', $rolePembuat)->first();
+            }
+
+            // 3. Bukan timker → mengetahui = ADUM
+            else {
+                $mengetahui_user = \App\Models\User::where('role', 'adum')->first();
+            }
+        @endphp
+
         <div style="flex:1; text-align:center;">
             <div>MENGETAHUI</div>
-            <div>
-                {{ $pengajuan->mengetahui_jabatan 
-                    ? strtoupper(str_replace('_', ' ', $pengajuan->mengetahui_jabatan)) 
-                    : ($mengetahui_user->role ? strtoupper($mengetahui_user->role) : 'Role') 
-                }}
-            </div>
+            <div>{{ strtoupper($mengetahui_user->jabatan ?? $mengetahui_user->role ?? '-') }}</div>
+
             <div style="margin-top:60px;">
-                @if($pengajuan->mengetahui_id || $pengajuan->adum_id)
+                @if($pengajuan->mengetahui_approved_at)
                     <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
-                    {{ $mengetahui_user->name ?? '-' }}<br>
-                    NIP. {{ $mengetahui_user->nip ?? '-' }}<br>
-                    <small>{{ \Carbon\Carbon::parse($pengajuan->mengetahui_approved_at ?? $pengajuan->adum_approved_at)->format('d M Y H:i') }}</small>
+                    <div>{{ $mengetahui_user->name ?? '-' }}</div>
+                    <div>NIP. {{ $mengetahui_user->nip ?? '-' }}</div>
+                    <small>{{ $pengajuan->mengetahui_approved_at }}</small>
                 @else
                     <em style="color:red;">Tanda tangan menunggu approve</em>
                 @endif
             </div>
         </div>
 
-        <!-- PPK -->
+        {{-- ================= MENYETUJUI (PPK) ================= --}}
         <div style="flex:1; text-align:center;">
             <div>MENYETUJUI</div>
             <div>Pejabat Pembuat Komitmen</div>
+
             <div style="margin-top:60px;">
-                @if($pengajuan->ppk_id)
+                @if($pengajuan->ppk_approved_at)
                     <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
-                    {{ $pengajuan->ppk->name ?? 'Nama PPK' }}<br>
-                    NIP. {{ $pengajuan->ppk->nip ?? '-' }}<br>
-                    <small>{{ $pengajuan->ppk_approved_at ? \Carbon\Carbon::parse($pengajuan->ppk_approved_at)->format('d M Y H:i') : '' }}</small>
+                    <div>{{ $pengajuan->ppk->name }}</div>
+                    <div>NIP. {{ $pengajuan->ppk->nip }}</div>
+                    <small>{{ $pengajuan->ppk_approved_at }}</small>
                 @else
                     <em style="color:red;">Tanda tangan menunggu approve</em>
                 @endif
             </div>
         </div>
 
-        <!-- Penanggung Jawab -->
+        {{-- ================= PENANGGUNG JAWAB ================= --}}
         <div style="flex:1; text-align:center;">
             <div>PENANGGUNG JAWAB</div>
+
             <div style="margin-top:60px;">
                 {{ $pengajuan->user->name ?? 'Nama Penanggung Jawab' }}<br>
                 NIP. {{ $pengajuan->user->nip ?? '-' }}

@@ -8,6 +8,8 @@ use App\Models\Laporan;
 use App\Models\Profile;
 use App\Models\Honor;
 use App\Models\PpkGroup;
+use App\Mail\NotifikasiPengajuan;
+use App\Helpers\NotifikasiHelper;
 use Illuminate\Support\Facades\Auth;
 
 class ApproveController extends Controller
@@ -115,30 +117,60 @@ class ApproveController extends Controller
         $pengajuan = Pengajuan::findOrFail($id);
         $user = auth()->user();
 
-        if(str_starts_with($user->role, 'timker_')) {
+        // PERSEDIAAN
+        if ($user->role === 'persediaan') {
+            $pengajuan->persediaan_id = $user->id;
+            $pengajuan->persediaan_approved_at = now();
+            $pengajuan->persediaan_keterangan = $request->keterangan;
+            $pengajuan->status = 'pending_mengetahui';
+        }
+
+        // MENGETAHUI (TIMKER ATAU ADUM)
+        elseif (str_starts_with($user->role, 'timker_') || $user->role === 'adum') {
             $pengajuan->mengetahui_id = $user->id;
-            $pengajuan->mengetahui_jabatan = $user->role; // simpan role yang approve
+            $pengajuan->mengetahui_jabatan = $user->role;
             $pengajuan->mengetahui_approved_at = now();
             $pengajuan->mengetahui_keterangan = $request->keterangan;
             $pengajuan->status = 'pending_ppk';
-        } elseif($user->role === 'adum') {
-            $pengajuan->adum_id = $user->id;
-            $pengajuan->adum_approved_at = now();
-            $pengajuan->adum_keterangan = $request->keterangan;
-            $pengajuan->status = 'pending_ppk';
-        } elseif($user->role === 'ppk') {
-            if($pengajuan->status !== 'pending_ppk') {
-                return back()->with('error', 'Harus di-approve ADUM dulu!');
+        }
+
+        // PPK
+        elseif ($user->role === 'ppk') {
+            if ($pengajuan->status !== 'pending_ppk') {
+                return back()->with('error', 'Belum saatnya PPK approve.');
             }
+
             $pengajuan->ppk_id = $user->id;
             $pengajuan->ppk_approved_at = now();
             $pengajuan->ppk_keterangan = $request->keterangan;
             $pengajuan->status = 'pending_pengadaan';
-        } else {
-            return back()->with('error', 'Role tidak memiliki hak approve.');
         }
 
         $pengajuan->save();
+        // Kirim email ke role berikutnya
+        if ($user->role === 'adum') {
+            $nextRole = 'ppk';
+        } elseif ($user->role === 'ppk') {
+            $nextRole = 'pengadaan';
+        } elseif (str_starts_with($user->role, 'timker_')) {
+            $nextRole = 'adum'; // atau 'ketua_timker' sesuai logika timker
+        } else {
+            $nextRole = null;
+        }
+
+        // Kirim notifikasi kalau ada role tujuan
+        if ($nextRole) {
+            $pesan = "Pengajuan ID {$pengajuan->id} telah disetujui oleh {$user->role}. Silakan lakukan tindakan selanjutnya.";
+
+            if (app()->environment('local')) {
+                // Kalau di local environment, jangan kirim email, cukup log
+                \Log::info("Email NOT sent: {$pesan} -> {$nextRole}");
+            } else {
+                // Kirim email beneran kalau bukan local
+                NotifikasiHelper::kirim($pengajuan, $nextRole, $pesan);
+            }
+        }
+
         return back()->with('success', 'Pengajuan berhasil di-approve!');
     }
 
@@ -203,4 +235,27 @@ class ApproveController extends Controller
 
         return view('approve.laporan', compact('pengajuans'));
     }
+
+    public function show($id)
+    {
+        $pengajuan = Pengajuan::with(['items', 'user', 'mengetahui', 'adum', 'ppk'])
+                    ->findOrFail($id);
+
+        $user = auth()->user();
+
+        if(str_starts_with($user->role, 'timker_')) {
+            return redirect()->route('timker.dashboard'); // misal route dashboard timker
+        } elseif($user->role === 'adum') {
+            return redirect()->route('adum.dashboard');
+        } elseif($user->role === 'ppk') {
+            return redirect()->route('ppk.dashboard');
+        } elseif($user->role === 'pengadaan') {
+            return redirect()->route('pengadaan.dashboard');
+        } elseif($user->role === 'bendahara') {
+            return redirect()->route('bendahara.dashboard');
+        } else {
+            abort(403, 'Akses ditolak.');
+        }
+    }
+
 }

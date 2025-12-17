@@ -83,4 +83,11 @@ class AnggotaTimkerController extends Controller
 
         return $options;
     }
+
+    public function show($id)
+    {
+        $pengajuan = Pengajuan::with('items', 'user')->findOrFail($id);
+        return view('anggota_timker.show', compact('pengajuan'));
+    }
+
 }

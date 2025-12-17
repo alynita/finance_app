@@ -34,6 +34,7 @@
                             <th style="padding:10px;">Ongkos Kirim</th>
                             <th style="padding:10px;">Jumlah Dana</th>
                             <th style="padding:10px;">Link</th>
+                            <th style="padding:10px;">Catatan</th>
                         @else($group->pengajuan->jenis_pengajuan === 'kerusakan')
                             <th style="padding:10px;">Harga Satuan</th>
                             <th style="padding:10px;">Jumlah Dana</th>
@@ -88,6 +89,7 @@
                                         -
                                     @endif
                                 </td>
+                            <td style="border-bottom:1px solid #ddd; padding:0.6rem;">{{ $item->catatan_ppk }}</td>
                             @else($group->pengajuan->jenis_pengajuan === 'kerusakan')
                                 <td style="border-bottom:1px solid #ddd; padding:0.6rem;">
                                     <span class="text-view">{{ number_format($item->harga_satuan, 0, ',', '.') }}</span>

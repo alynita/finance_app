@@ -53,81 +53,120 @@
 
     <h3>Daftar Pengajuan</h3>
 
-    <table style="width:100%; border-collapse:collapse; margin-top:1rem;">
+    <table style="width:100%; border-collapse:collapse; margin-top:1rem; font-size:14px;">
         <thead>
-            <tr>
-                <th style="border:1px solid #ccc; padding:0.5rem;">No</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Created At</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Nama Kegiatan</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Jenis Pengajuan</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Pengaju</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Status</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Detail</th>
-                <th style="border:1px solid #ccc; padding:0.5rem;">Aksi</th>
+            <tr style="background:#f5f5f5;">
+                <th style="border:1px solid #ccc; padding:8px; text-align:center; width:40px;">No</th>
+                <th style="border:1px solid #ccc; padding:8px; text-align:center; width:160px;">Kode</th>
+                <th style="border:1px solid #ccc; padding:8px; text-align:center; width:150px;">Created At</th>
+                <th style="border:1px solid #ccc; padding:8px;">Nama Kegiatan</th>
+                <th style="border:1px solid #ccc; padding:8px; text-align:center; width:140px;">Jenis</th>
+                <th style="border:1px solid #ccc; padding:8px; text-align:center; width:120px;">Pengaju</th>
+                <th style="border:1px solid #ccc; padding:8px; text-align:center; width:140px;">Status</th>
+                <th style="border:1px solid #ccc; padding:8px; text-align:center; width:110px;">Detail</th>
+                <th style="border:1px solid #ccc; padding:8px; text-align:center; width:160px;">Aksi</th>
             </tr>
         </thead>
+
         <tbody>
             @forelse($pengajuans as $index => $pengajuan)
             <tr>
-                <td style="border:1px solid #ccc; padding:0.5rem;">{{ $index + 1 }}</td>
-                <td style="border:1px solid #ccc; padding:0.5rem;">{{ $pengajuan->created_at->format('d M Y H:i') }}</td>
-                <td style="border:1px solid #ccc; padding:0.5rem;">{{ ucfirst($pengajuan->nama_kegiatan) }}</td>
-                <td style="border:1px solid #ccc; padding:0.5rem;">{{ ucfirst($pengajuan->jenis_pengajuan) }}</td>
-                <td style="border:1px solid #ccc; padding:0.5rem;">{{ $pengajuan->user->name }}</td>
-                <td style="border:1px solid #ccc; padding:0.5rem;">{{ ucfirst(str_replace('_', ' ', $pengajuan->status)) }}</td>
-                <td style="border:1px solid #ccc; padding:0.5rem;">
+                <td style="border:1px solid #ccc; padding:8px; text-align:center;">
+                    {{ $index + 1 }}
+                </td>
+
+                <td style="border:1px solid #ccc; padding:8px; text-align:center; font-weight:600;">
+                    {{ $pengajuan->kode_pengajuan ?? '-' }}
+                </td>
+
+                <td style="border:1px solid #ccc; padding:8px; text-align:center; white-space:nowrap;">
+                    {{ $pengajuan->created_at->format('d M Y') }}<br>
+                    <small style="color:#666;">{{ $pengajuan->created_at->format('H:i') }}</small>
+                </td>
+
+                <td style="border:1px solid #ccc; padding:8px;">
+                    {{ $pengajuan->nama_kegiatan }}
+                </td>
+
+                <td style="border:1px solid #ccc; padding:8px; text-align:center;">
+                    {{ $pengajuan->jenis_pengajuan === 'pembelian'
+                        ? 'Pembelian'
+                        : 'Pemeliharaan' }}
+                </td>
+
+                <td style="border:1px solid #ccc; padding:8px; text-align:center;">
+                    {{ $pengajuan->user->name }}
+                </td>
+
+                <td style="border:1px solid #ccc; padding:8px; text-align:center;">
+                    <span style="
+                        display:inline-block;
+                        padding:4px 10px;
+                        border-radius:12px;
+                        font-size:12px;
+                        background:#e3f2fd;
+                        color:#0d47a1;
+                        font-weight:600;
+                    ">
+                        Pending ADUM
+                    </span>
+                </td>
+
+                <td style="border:1px solid #ccc; padding:8px; text-align:center;">
                     <a href="{{ route('pegawai.pengajuan.show', $pengajuan->id) }}"
-                        style="background:#007bff; color:white; padding:0.4rem 0.8rem; border-radius:4px; text-decoration:none;">
-                        Lihat Detail
+                    style="
+                            background:#1976d2;
+                            color:white;
+                            padding:6px 10px;
+                            border-radius:4px;
+                            text-decoration:none;
+                            font-size:13px;
+                    ">
+                        Detail
                     </a>
                 </td>
-                <td style="border:1px solid #ccc; padding:0.5rem; display:flex; gap:0.5rem;">
-                    {{-- Timker --}}
-                    @if(str_starts_with($user->role, 'timker') && $pengajuan->status === 'pending_' . $user->role)
-                        <form action="{{ route($user->role . '.approve', $pengajuan->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="keterangan" value="Approve by {{ $user->name }}">
-                            <button type="submit" style="padding:0.3rem 0.6rem; background:#4CAF50; color:white; border:none; border-radius:4px;">Approve</button>
-                        </form>
-                        <form action="{{ route($user->role . '.reject', $pengajuan->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="keterangan" value="Reject by {{ $user->name }}">
-                            <button type="submit" style="padding:0.3rem 0.6rem; background:#f44336; color:white; border:none; border-radius:4px;">Reject</button>
-                        </form>
 
-                    {{-- ADUM --}}
-                    @elseif($user->role === 'adum' && $pengajuan->status === 'pending_adum')
+                <td style="border:1px solid #ccc; padding:8px;">
+                    <div style="display:flex; justify-content:center; gap:6px;">
                         <form action="{{ route('adum.approve', $pengajuan->id) }}" method="POST">
                             @csrf
-                            <input type="hidden" name="keterangan" value="Approve by {{ $user->name }}">
-                            <button type="submit" style="padding:0.3rem 0.6rem; background:#4CAF50; color:white; border:none; border-radius:4px;">Approve</button>
-                        </form>
-                        <form action="{{ route('adum.reject', $pengajuan->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="keterangan" value="Reject by {{ $user->name }}">
-                            <button type="submit" style="padding:0.3rem 0.6rem; background:#f44336; color:white; border:none; border-radius:4px;">Reject</button>
+                            <button type="submit"
+                                style="
+                                    background:#4CAF50;
+                                    color:white;
+                                    border:none;
+                                    padding:6px 10px;
+                                    border-radius:4px;
+                                    font-size:13px;
+                                    cursor:pointer;
+                                ">
+                                Approve
+                            </button>
                         </form>
 
-                    {{-- PPK --}}
-                    @elseif($user->role === 'ppk' && $pengajuan->status === 'pending_ppk')
-                        <form action="{{ route('ppk.approve', $pengajuan->id) }}" method="POST">
+                        <form action="{{ route('adum.reject', $pengajuan->id) }}" method="POST">
                             @csrf
-                            <input type="hidden" name="keterangan" value="Approve by {{ $user->name }}">
-                            <button type="submit" style="padding:0.3rem 0.6rem; background:#4CAF50; color:white; border:none; border-radius:4px;">Approve</button>
+                            <button type="submit"
+                                style="
+                                    background:#f44336;
+                                    color:white;
+                                    border:none;
+                                    padding:6px 10px;
+                                    border-radius:4px;
+                                    font-size:13px;
+                                    cursor:pointer;
+                                ">
+                                Reject
+                            </button>
                         </form>
-                        <form action="{{ route('ppk.reject', $pengajuan->id) }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="keterangan" value="Reject by {{ $user->name }}">
-                            <button type="submit" style="padding:0.3rem 0.6rem; background:#f44336; color:white; border:none; border-radius:4px;">Reject</button>
-                        </form>
-                    @else
-                        <span style="color:gray;">No Action</span>
-                    @endif
+                    </div>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="8" style="text-align:center; padding:1rem;">Tidak ada pengajuan.</td>
+                <td colspan="9" style="text-align:center; padding:1rem; color:#777;">
+                    Tidak ada pengajuan
+                </td>
             </tr>
             @endforelse
         </tbody>

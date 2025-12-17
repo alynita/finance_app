@@ -75,4 +75,20 @@ class Pengajuan extends Model
         return $this->belongsTo(User::class, 'verifikator_id');
     }
 
+    public function ppkApproval()
+    {
+        return $this->hasOne(\App\Models\PpkGroup::class, 'pengajuan_id')
+                    ->where('status', 'pending_pengadaan');
+    }
+
+    public function persediaan()
+    {
+        return $this->belongsTo(User::class, 'persediaan_by');
+    }
+
+    public function pengeluaran()
+    {
+        return $this->hasOne(PengeluaranBarang::class, 'pengajuan_id');
+    }
+
 }

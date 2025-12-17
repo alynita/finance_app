@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
 use App\Models\PengajuanItem;
+use App\Helpers\NotifikasiHelper;
 use App\Models\Kro;
 use Illuminate\Support\Facades\DB;
+use App\Helpers\KodePengajuanHelper;
 
 class PengajuanController extends Controller
 {
@@ -106,6 +108,8 @@ class PengajuanController extends Controller
         $pengajuan->nama_kegiatan = $request->nama_kegiatan;
         $pengajuan->waktu_kegiatan = $request->waktu_kegiatan;
         $pengajuan->jenis_pengajuan = $request->jenis_pengajuan;
+        $pengajuan->kode_pengajuan =
+            KodePengajuanHelper::generate($request->jenis_pengajuan);
 
         // Atur mengetahui & status tergantung jenis pengajuan
         if ($request->jenis_pengajuan === 'kerusakan') {
@@ -113,18 +117,10 @@ class PengajuanController extends Controller
             $pengajuan->mengetahui_jabatan = 'adum';
             $pengajuan->status = 'pending_adum';
         } else {
-            // Atur mengetahui & status tergantung role pegawai
-            $userRole = auth()->user()->role;
-
-            // Jika dia anggota timker → kirim ke timker tersebut
-            if (str_starts_with($userRole, 'anggota_timker_')) {
-                $pengajuan->mengetahui_jabatan = str_replace('anggota_', '', $userRole);
-                $pengajuan->status = 'pending_' . $pengajuan->mengetahui_jabatan;
-            } else {
-                // Jika bukan timker → otomatis ADUM
-                $pengajuan->mengetahui_jabatan = 'adum';
-                $pengajuan->status = 'pending_adum';
-            }
+            // JENIS PENGAJUAN PEMBELIAN
+            // Semua masuk ke persediaan dulu
+            $pengajuan->mengetahui_jabatan = null; 
+            $pengajuan->status = 'menunggu_persediaan';
         }
 
         $pengajuan->save();
@@ -173,8 +169,27 @@ class PengajuanController extends Controller
             $pengajuan->items()->create($dataItem);
         }
 
+        $userRole = auth()->user()->role;
+
+        // Tentukan role tujuan
+        if (str_starts_with($userRole, 'anggota_timker_')) {
+            $roleTujuan = 'timker_';
+        } else {
+            $roleTujuan = 'adum';
+        }
+
+        $pesan = "Ada pengajuan baru dari " . auth()->user()->name;
+
+        // Cek environment
+        if (app()->environment('local')) {
+            \Log::info("Email NOT sent: {$pesan} -> {$roleTujuan}");
+        } else {
+            NotifikasiHelper::kirim($pengajuan, $roleTujuan, $pesan);
+        }
+
+
         return redirect()->route('pegawai.daftar-pengajuan')
-            ->with('success', 'Pengajuan berhasil dibuat.');
+            ->with('success', 'Pengajuan berhasil dibuat dan notifikasi dikirim!');
     }
 
     public function updateStatus($id)
@@ -219,20 +234,94 @@ class PengajuanController extends Controller
 
     public function show($id)
     {
-        $pengajuan = Pengajuan::with(['items', 'user', 'mengetahui', 'adum', 'ppk'])
-                    ->findOrFail($id);
+        $user = auth()->user();
 
-        // Buat kro_full per item
+        $pengajuan = Pengajuan::with([
+            'items' => function ($q) use ($user) {
+
+                // 🔴 ROLE APPROVAL HANYA LIHAT ITEM TIDAK ADA / SEBAGIAN
+                if (
+                    $user->role === 'adum' ||
+                    str_starts_with($user->role, 'timker_') ||
+                    in_array($user->role, ['ppk', 'keuangan'])
+                ) {
+                    $q->whereIn('status_persediaan', ['TIDAK_ADA', 'SEBAGIAN']);
+                }
+
+                // 🔵 PEGAWAI & PERSEDIAAN → tidak difilter
+            },
+            'user',
+            'mengetahui',
+            'adum',
+            'ppk',
+            'persediaan'
+        ])->findOrFail($id);
+
+        /* ================================
+        * HITUNG DATA TAMPILAN PER ITEM
+        * ================================ */
         foreach ($pengajuan->items as $item) {
-            // Cek dulu kalau kro ada isinya
-            if ($item->kro) {
-                $item->kro_full = $item->kro;
-            } else {
-                $item->kro_full = '-';
+
+            // DEFAULT (UNTUK PEGAWAI & PERSEDIAAN)
+            $item->volume_tampil = $item->volume;
+            $item->jumlah_dana_tampil = $item->jumlah_dana_pengajuan;
+
+            // 🔴 KHUSUS ROLE APPROVAL
+            if (
+                $user->role === 'adum' ||
+                str_starts_with($user->role, 'timker_') ||
+                in_array($user->role, ['ppk', 'keuangan'])
+            ) {
+
+                // 👉 JIKA SEBAGIAN
+                if ($item->status_persediaan === 'SEBAGIAN') {
+
+                    $sisa = max(
+                        $item->volume - ($item->jumlah_tersedia ?? 0),
+                        0
+                    );
+
+                    $item->volume_tampil = $sisa;
+                    $item->jumlah_dana_tampil = $sisa * ($item->harga_satuan ?? 0);
+                }
+
+                // 👉 JIKA TIDAK ADA
+                if ($item->status_persediaan === 'TIDAK_ADA') {
+                    $item->volume_tampil = $item->volume;
+                    $item->jumlah_dana_tampil = $item->jumlah_dana_pengajuan;
+                }
             }
+
+            // KRO
+            $item->kro_full = $item->kro ?? '-';
         }
 
-        return view('pegawai.pengajuan.show', compact('pengajuan'));
+        /* ================================
+        * DATA APPROVAL
+        * ================================ */
+        $isApprovedPPK = $pengajuan->ppk_id !== null;
+        $ppkUser = $pengajuan->ppk ?? null;
+        $ppkDate = $pengajuan->ppk_approved_at ?? null;
+
+        $isApprovedMengetahui = $pengajuan->mengetahui_id !== null;
+
+        $mengetahuiUser = $pengajuan->mengetahui
+            ?? $pengajuan->adum
+            ?? null;
+
+        $mengetahuiDate = $pengajuan->mengetahui_approved_at
+            ?? $pengajuan->adum_approved_at
+            ?? null;
+
+        return view('pegawai.pengajuan.show', compact(
+            'pengajuan',
+            'isApprovedPPK',
+            'ppkUser',
+            'ppkDate',
+            'isApprovedMengetahui',
+            'mengetahuiUser',
+            'mengetahuiDate'
+        ));
     }
 
 }

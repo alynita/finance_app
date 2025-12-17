@@ -19,6 +19,7 @@
         <thead>
             <tr>
                 <th style="border:1px solid #ccc; padding:0.5rem;">No</th>
+                <th style="border:1px solid #ccc; padding:0.5rem;">Kode</th>
                 <th style="border:1px solid #ccc; padding:0.5rem;">Nama Kegiatan</th>
                 <th style="border:1px solid #ccc; padding:0.5rem;">Pengaju</th>
                 <th style="border:1px solid #ccc; padding:0.5rem;">Status</th>
@@ -30,6 +31,7 @@
             @forelse($groups as $index => $group)
             <tr>
                 <td style="border:1px solid #ccc; padding:0.5rem;">{{ $index + 1 }}</td>
+                <td style="border:1px solid #ccc; padding:0.5rem;">{{ $group->pengajuan->kode_pengajuan ?? '-' }}</td>
                 <td style="border:1px solid #ccc; padding:0.5rem;">
                     {{ $group->pengajuan->nama_kegiatan }}
                 </td>

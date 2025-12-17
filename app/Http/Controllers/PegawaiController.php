@@ -12,30 +12,31 @@ class PegawaiController extends Controller
     {
         $user = Auth::user();
 
-        // 🔥 Hanya tampilkan pending + rejected (approved disembunyikan)
+        // Tampilkan SEMUA kecuali approved (biar fokus proses)
         $pengajuans = Pengajuan::where('user_id', $user->id)
-                        ->where('status', '!=', 'approved')
-                        ->get();
+            ->where('status', '!=', 'approved')
+            ->latest()
+            ->get();
 
-        // Hitung status
-        $pending = $pengajuans->whereIn('status', [
-            'pending_adum',
-            'pending_ppk',
-            'pending_pengadaan',
-            'submitted_keuangan',
-            'processed',
-            'adum_approved',
-            'approve_ppk'
-        ])->count();
+        // 🔵 Pending = semua yang masih diproses
+        $pending = Pengajuan::where('user_id', $user->id)
+            ->whereIn('status', [
+                'menunggu_persediaan',
+                'pending_adum',
+                'pending_ppk',
+                'pending_pengadaan',
+                'submitted_keuangan',
+            ])->count();
 
-        // approved tetap dihitung tapi tidak ditampilkan di tabel
+        // 🟢 Approved
         $approved = Pengajuan::where('user_id', $user->id)
-                        ->where('status', 'approved')
-                        ->count();
+            ->where('status', 'approved')
+            ->count();
 
+        // 🔴 Rejected
         $rejected = Pengajuan::where('user_id', $user->id)
-                        ->where('status', 'like', 'rejected%')
-                        ->count();
+            ->where('status', 'rejected')
+            ->count();
 
         return view('dashboard.pegawai', compact(
             'user',

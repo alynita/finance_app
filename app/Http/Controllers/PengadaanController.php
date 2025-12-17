@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
 use App\Models\PpkGroup;
+use App\Helpers\NotifikasiHelper;
 
 class PengadaanController extends Controller
 {
@@ -91,6 +92,15 @@ class PengadaanController extends Controller
         if ($pengajuan) {
             $pengajuan->status = 'submitted_keuangan';
             $pengajuan->save();
+        }
+
+        $nextRole = 'keuangan';
+        $pesan = "Grup ID {$group->id} telah disubmit ke Keuangan. Silakan lakukan tindakan selanjutnya.";
+
+        if (app()->environment('local')) {
+            \Log::info("Email NOT sent: {$pesan} -> {$nextRole}");
+        } else {
+            NotifikasiHelper::kirim($pengajuan, $nextRole, $pesan);
         }
 
         return redirect()->route('pengadaan.arsip')

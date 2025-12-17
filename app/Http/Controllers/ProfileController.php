@@ -30,6 +30,7 @@ class ProfileController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $request->user()->id],
             'nip' => ['required', 'string', 'max:50', 'unique:users,nip,' . $request->user()->id],
+            'no_hp' => ['nullable', 'regex:/^08[0-9]{8,12}$/'],
         ]);
 
         $user = $request->user();

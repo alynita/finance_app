@@ -26,6 +26,7 @@
                     <th>Lokasi</th>
                     <th>Jenis Kerusakan</th>
                     <th>Foto</th>
+                    <th>Catatan</th>
                 </tr>
             </thead>
             <tbody>
@@ -39,47 +40,54 @@
                     <td>{{ $item->lokasi ?? '-' }}</td>
                     <td>{{ $item->jenis_kerusakan ?? '-' }}</td>
                     <td>@if($item->foto) <a href="{{ $item->foto }}" target="_blank">Lihat</a> @else - @endif</td>
+                    <td>
+                        <input type="text" name="catatan_ppk[{{ $item->id }}]" class="form-control catatan-input" value="{{ $item->catatan_ppk ?? '' }}" placeholder="Isi catatan" data-item-id="{{ $item->id }}">
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
-    @elseif($pengajuan->jenis_pengajuan === 'pembelian')
-    <table border="1" cellpadding="6" style="width:100%; border-collapse:collapse;">
-        <thead style="background:#f3f3f3;">
-            <tr>
-                <th>No</th>
-                <th>Nama Barang</th>
-                <th>Volume</th>
-                <th>KRO / Kode Akun</th>
-                <th>Harga Satuan</th>
-                <th>Ongkos Kirim</th>
-                <th>Jumlah Dana</th>
-                <th>Link</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($pengajuan->items as $index => $item)
-            <tr data-item-id="{{ $item->id }}">
-                <td>{{ $index+1 }}</td>
-                <td>{{ $item->nama_barang }}</td>
-                <td>{{ $item->volume }}</td>
-                <td>
-                    <div class="kro-dropdown-wrapper" style="position:relative;">
-                        <input type="text" class="kro-input" readonly value="{{ $item->kro ?? '' }}" placeholder="Pilih KRO →">
-                        <input type="hidden" class="kro-hidden" value="{{ $item->kro ?? '' }}">
-                        <div class="kro-menu" style="display:none; position:absolute; background:#fff; border:1px solid #ccc; max-height:200px; overflow:auto;"></div>
-                    </div>
-                    <button type="button" class="edit-kro-btn">Edit</button>
-                    <button type="button" class="save-kro-btn" style="display:none;">Simpan</button>
-                </td>
-                <td>{{ number_format($item->harga_satuan,0,',','.') }}</td>
-                <td>{{ number_format($item->ongkos_kirim,0,',','.') }}</td>
-                <td>{{ number_format($item->jumlah_dana_pengajuan,0,',','.') }}</td>
-                <td>@if($item->link) <a href="{{ $item->link }}" target="_blank">Lihat</a> @else - @endif</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    @else
+        <table border="1" cellpadding="6" style="width:100%; border-collapse:collapse;">
+            <thead style="background:#f3f3f3;">
+                <tr>
+                    <th>No</th>
+                    <th>Nama Barang</th>
+                    <th>Volume</th>
+                    <th>KRO / Kode Akun</th>
+                    <th>Harga Satuan</th>
+                    <th>Ongkos Kirim</th>
+                    <th>Jumlah Dana</th>
+                    <th>Link</th>
+                    <th>Catatan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($pengajuan->items as $index => $item)
+                <tr data-item-id="{{ $item->id }}">
+                    <td>{{ $index+1 }}</td>
+                    <td>{{ $item->nama_barang }}</td>
+                    <td>{{ number_format($item->volume_tampil) }}</td>
+                    <td>
+                        <div class="kro-dropdown-wrapper" style="position:relative;">
+                            <input type="text" class="kro-input" readonly value="{{ $item->kro ?? '' }}" placeholder="Pilih KRO →">
+                            <input type="hidden" class="kro-hidden" value="{{ $item->kro ?? '' }}">
+                            <div class="kro-menu" style="display:none; position:absolute; background:#fff; border:1px solid #ccc; max-height:200px; overflow:auto;"></div>
+                        </div>
+                        <button type="button" class="edit-kro-btn">Edit</button>
+                        <button type="button" class="save-kro-btn" style="display:none;">Simpan</button>
+                    </td>
+                    <td>{{ number_format($item->harga_satuan,0,',','.') }}</td>
+                    <td>{{ number_format($item->ongkos_kirim,0,',','.') }}</td>
+                    <td>{{ number_format($item->jumlah_dana_tampil) }}</td>
+                    <td>@if($item->link) <a href="{{ $item->link }}" target="_blank">Lihat</a> @else - @endif</td>
+                    <td>
+                        <input type="text" name="catatan_ppk[{{ $item->id }}]" class="form-control catatan-input" value="{{ $item->catatan_ppk ?? '' }}" placeholder="Isi catatan" data-item-id="{{ $item->id }}">
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     @endif
 
     <hr>
@@ -126,9 +134,11 @@
                     @else
                         <th>KRO / Kode Akun</th>
                         <th>Ongkos Kirim</th>
+                        <th>Harga Satuan</th>
                     @endif
                     <th>Jumlah Dana</th>
                     <th>Foto / Link</th>
+                    <th>Catatan</th>
                 </tr>
             </thead>
             <tbody>
@@ -143,6 +153,7 @@
                     @else
                         <td>{{ $item->kro ?? '-' }}</td>
                         <td>{{ number_format($item->ongkos_kirim,0,',','.') }}</td>
+                        <td>{{ number_format($item->harga_satuan,0,',','.') }}</td>
                     @endif
                     <td>{{ number_format($item->jumlah_dana_pengajuan,0,',','.') }}</td>
                     <td>
@@ -152,6 +163,7 @@
                             @if($item->link) <a href="{{ $item->link }}" target="_blank">Lihat</a> @else - @endif
                         @endif
                     </td>
+                    <td>{{ $item->catatan_ppk }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -182,7 +194,7 @@ document.getElementById('show-group-form').addEventListener('click', function(){
     document.getElementById('group-form').style.display = 'block';
 });
 
-function renderGroup(){
+function renderGroup() {
     const container = document.getElementById('groups-container');
     const groupDiv = document.createElement('div');
     groupDiv.classList.add('group');
@@ -200,59 +212,55 @@ function renderGroup(){
                     <th>Volume</th>
     `;
 
-    if(pengajuanType === 'kerusakan'){
+    if (pengajuanType === 'kerusakan') {
         html += '<th>Lokasi</th><th>Jenis Kerusakan</th>';
     } else {
-        html += '<th>KRO / Kode Akun</th><th>Ongkos Kirim</th>';
+        html += '<th>KRO / Kode Akun</th><th>Ongkos Kirim</th><th>Harga Satuan</th><th>Link</th>';
     }
 
-    html += '<th>Jumlah Dana</th></tr></thead><tbody>';
+    html += '<th>Jumlah Dana</th><th>Catatan</th></tr></thead><tbody>';
 
     const items = document.querySelectorAll('tr[data-item-id]');
     items.forEach((row, index) => {
         const itemId = parseInt(row.dataset.itemId);
-        if(selectedItems.has(itemId)) return;
+        if (selectedItems.has(itemId)) return;
 
-        const namaBarang = row.children[1].textContent;
-        const volume = row.children[2].textContent;
-        let kro = '';
-        let ongkir = '';
-        if(pengajuanType !== 'kerusakan'){
+        const namaBarang = row.children[1].textContent.trim();
+        const volume = row.children[2].textContent.trim();
+        const jumlahDana = row.children[pengajuanType === 'kerusakan' ? 6 : 6].textContent.trim();
+        const catatanPpk = row.querySelector('input[name^="catatan_ppk"]')?.value || '';
+
+        let lokasi = '', jenisKerusakan = '', kro = '', ongkir = '', hargaSatuan = '', link = '';
+
+        if (pengajuanType === 'kerusakan') {
+            lokasi = row.children[4].textContent.trim();
+            jenisKerusakan = row.children[5].textContent.trim();
+        } else {
             kro = row.querySelector('.kro-hidden')?.value || '';
-            ongkir = row.children[5].textContent; // sesuaikan index kolom ongkir
+            ongkir = row.children[5].textContent.trim();
+            hargaSatuan = row.children[4].textContent.trim();
+            link = row.children[7].innerHTML.trim();
         }
-        let lokasi = '';
-        let jenisKerusakan = '';
-        if(pengajuanType === 'kerusakan'){
-            lokasi = row.children[4].textContent;
-            jenisKerusakan = row.children[5].textContent;
-        }
-        const jumlahDana = row.children[pengajuanType==='kerusakan'?6:6].textContent;
 
-        html += `
-            <tr>
-                <td style="text-align:center;">
-                    <input type="checkbox" class="item-checkbox" value="${itemId}" name="groups[${groupCount}][]">
-                </td>
-                <td>${index+1}</td>
-                <td>${namaBarang}</td>
-                <td>${volume}</td>
-                ${pengajuanType==='kerusakan'
-                    ? `<td>${lokasi}</td><td>${jenisKerusakan}</td>`
-                    : `<td>${kro}</td><td>${ongkir}</td>`}
-                <td>${jumlahDana}</td>
-            </tr>
-        `;
+        html += `<tr>
+                    <td style="text-align:center;">
+                        <input type="checkbox" class="item-checkbox" value="${itemId}" name="groups[${groupCount}][]">
+                    </td>
+                    <td>${index + 1}</td>
+                    <td>${namaBarang}</td>
+                    <td>${volume}</td>
+                    ${pengajuanType === 'kerusakan'
+                        ? `<td>${lokasi}</td><td>${jenisKerusakan}</td><td>${jumlahDana}</td><td>${catatanPpk}</td>`
+                        : `<td>${kro}</td><td>${ongkir}</td><td>${hargaSatuan}</td><td>${link}</td><td>${jumlahDana}</td><td>${catatanPpk}</td>`}
+                </tr>`;
     });
 
     html += '</tbody></table>';
     groupDiv.innerHTML = html;
     container.appendChild(groupDiv);
 
-    groupDiv.querySelectorAll('.item-checkbox').forEach(cb=>{
-        cb.addEventListener('change', function(){
-            updateSelectedItems();
-        });
+    groupDiv.querySelectorAll('.item-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelectedItems);
     });
 
     groupCount++;
@@ -265,117 +273,34 @@ function updateSelectedItems(){
     });
 }
 
-document.getElementById('add-group').addEventListener('click', function(){
+document.getElementById('add-group').addEventListener('click', function(e){
+    e.preventDefault();
     renderGroup();
 });
 
-// 🔹 Edit KRO per item
-const kroAllData = @json($kroAll);
-
-document.querySelectorAll('.kro-dropdown-wrapper').forEach(wrapper => {
-    const input = wrapper.querySelector('.kro-input');
-    const hiddenInput = wrapper.querySelector('.kro-hidden');
-    const menu = wrapper.querySelector('.kro-menu');
-    const editBtn = wrapper.nextElementSibling; // tombol Edit
-    const saveBtn = wrapper.nextElementSibling.nextElementSibling; // tombol Simpan
-
-    // tombol Edit
-    editBtn.addEventListener('click', () => {
-        input.readOnly = false;      // bisa klik input
-        menu.style.display = 'block'; // tampilkan menu
-        editBtn.style.display = 'none';
-        saveBtn.style.display = 'inline-block';
-    });
-
-    // klik di luar → tutup dropdown
-    document.addEventListener('click', function(e) {
-        if(!wrapper.contains(e.target) && !editBtn.contains(e.target)) menu.style.display = 'none';
-    });
-
-    // build tree KRO
-    function buildTreeNodes(data, parentEl, onSelect, path = []) {
-        data.forEach(item => {
-            const currentLabel = item.kode_akun ?? item.kode;
-            const newPath = [...path, currentLabel];
-
-            const row = document.createElement('div');
-            row.style.marginLeft = "10px";
-
-            const toggle = document.createElement('span');
-            toggle.textContent = item.children?.length ? "▸" : "";
-            toggle.style.cursor = "pointer";
-            toggle.style.marginRight = "4px";
-
-            const label = document.createElement('span');
-            label.textContent = currentLabel;
-            label.style.cursor = "pointer";
-
-            row.appendChild(toggle);
-            row.appendChild(label);
-            parentEl.appendChild(row);
-
-            let childBox = null;
-            if(item.children?.length) {
-                childBox = document.createElement("div");
-                childBox.style.display = "none";
-                childBox.style.marginLeft = "20px";
-                parentEl.appendChild(childBox);
-
-                buildTreeNodes(item.children, childBox, onSelect, newPath);
-            }
-
-            toggle.addEventListener("click", () => {
-                if(!childBox) return;
-                childBox.style.display = childBox.style.display === "block" ? "none" : "block";
-                toggle.textContent = childBox.style.display === "block" ? "▾" : "▸";
-            });
-
-            label.addEventListener("click", () => {
-                if(newPath.length < 3){
-                    if(childBox) {
-                        childBox.style.display = "block";
-                        toggle.textContent = "▾";
-                    }
-                    return;
-                }
-                const finalVal = newPath.slice(2).join('/');
-                input.value = finalVal;
-                hiddenInput.value = finalVal;
-                menu.style.display = 'none';
-            });
-        });
-    }
-
-    buildTreeNodes(kroAllData, menu, (val) => {
-        input.value = val;
-        hiddenInput.value = val;
-    });
-
-    // tombol Simpan
-    saveBtn.addEventListener('click', () => {
-        input.readOnly = true;
-        editBtn.style.display = 'inline-block';
-        saveBtn.style.display = 'none';
-
-        const itemId = wrapper.closest('tr').dataset.itemId;
-        const newValue = hiddenInput.value;
-
-        fetch(`/ppk/update-kro/${itemId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ kro: newValue })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if(data.success) console.log('✅ ' + data.message);
-            else console.error('❌ Gagal update KRO');
-        })
-        .catch(err => console.error('Fetch error:', err));
+// 🔹 Catatan auto-save
+document.querySelectorAll('.catatan-input').forEach(input => {
+    input.addEventListener('input', function() {
+        const itemId = this.dataset.itemId;
+        const value = this.value;
+        if (this.timer) clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+            fetch(`/ppk/update-catatan/${itemId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ catatan_ppk: value })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) console.log('✅ Catatan tersimpan');
+                else console.error('❌ Gagal simpan catatan');
+            })
+            .catch(err => console.error('Fetch error:', err));
+        }, 500);
     });
 });
-
 </script>
 @endsection

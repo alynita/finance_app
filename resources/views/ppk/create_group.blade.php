@@ -27,6 +27,7 @@
                 <th>Ongkos Kirim</th>
                 <th>Jumlah Dana</th>
                 <th>Link</th>
+                <th>Catatan</th>
             </tr>
         </thead>
         <tbody>
@@ -51,6 +52,9 @@
                 <td>{{ number_format($item->ongkos_kirim,0,',','.') }}</td>
                 <td>{{ number_format($item->jumlah_dana_pengajuan,0,',','.') }}</td>
                 <td>@if($item->link) <a href="{{ $item->link }}" target="_blank">Lihat</a> @else - @endif</td>
+                <td>
+                    <input type="text" name="catatan_ppk[{{ $item->id }}]" class="form-control" value="{{ $item->catatan_ppk ?? '' }}" placeholder="Isi catatan">
+                </td>
             </tr>
             @endforeach
         </tbody>
@@ -106,8 +110,8 @@
 </div>
 
 {{-- =========================
-   SCRIPT (dinamis + sinkron)
-   ========================= --}}
+SCRIPT (dinamis + sinkron)
+========================= --}}
 <script>
 /**
  * Strategy:
@@ -132,7 +136,7 @@ let itemList = @json($pengajuan->items->map(function($it){
         'harga_satuan' => $it->harga_satuan,
         'jumlah_dana_pengajuan' => $it->jumlah_dana_pengajuan,
         'link' => $it->link,
-        'keterangan' => $it->keterangan ?? '',
+        'catatan' => $it->catatan_ppk ?? '',
     ];
 }));
 

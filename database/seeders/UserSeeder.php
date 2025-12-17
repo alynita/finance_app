@@ -27,6 +27,7 @@ class UserSeeder extends Seeder
             ['name' => 'Timker6', 'email' => 'timker6@gmail.com', 'role'=> 'timker_6', 'password' => Hash::make('password123')],
             ['name' => 'Sarpras', 'email' => 'sarpras@gmail.com', 'role'=> 'sarpras', 'password' => Hash::make('password123')],
             ['name' => 'Bmn', 'email' => 'bmn@gmail.com', 'role'=> 'bmn', 'password' => Hash::make('password123')],
+            ['name' => 'Persediaan', 'email' => 'persediaan@gmail.com', 'role'=> 'persediaan', 'password' => Hash::make('password123')],
         ];
 
         foreach ($users as $user) {

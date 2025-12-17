@@ -23,6 +23,12 @@
             <td>:</td>
             <td>{{ ucfirst($pengajuan->jenis_pengajuan) }}</td>
         </tr>
+        <tr>
+            <td><strong>Nomor Pengajuan</strong></td>
+            <td>:</td>
+            <td><strong>{{ $pengajuan->kode_pengajuan }}</strong></td>
+        </tr>
+
     </table>
 
     <!-- Detail Item -->
@@ -38,6 +44,7 @@
                     <th style="border:1px solid #ccc; padding:0.5rem;">Jumlah Dana</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Foto/Ket</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Link</th>
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Keterangan Persediaan</th>
                 @elseif($pengajuan->jenis_pengajuan === 'kerusakan')
                     <th style="border:1px solid #ccc; padding:0.5rem;">Nama Barang</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Volume</th>
@@ -54,7 +61,9 @@
                 <tr>
                     @if($pengajuan->jenis_pengajuan === 'pembelian')
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $item->nama_barang ?? '-' }}</td>
-                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->volume ?? 0), 2) }}</td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">
+                            {{ number_format((float)($item->volume_tampil ?? $item->volume ?? 0), 2) }}
+                        </td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">
                             @php
                                 // Ambil kro_full, hapus duplikasi jika ada
@@ -78,7 +87,9 @@
                             {{ $kroDisplay }}
                         </td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->harga_satuan ?? 0), 2) }}</td>
-                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ number_format((float)($item->jumlah_dana_pengajuan ?? 0), 2) }}</td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">
+                            {{ number_format($item->jumlah_dana_tampil ?? $item->jumlah_dana_pengajuan) }}
+                        </td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">
                             @if($item->foto)
                                 <img src="{{ asset('storage/'.$item->foto) }}" 
@@ -93,6 +104,29 @@
                                 <a href="{{ $item->link }}" target="_blank">Buka Link</a>
                             @else
                                 -
+                            @endif
+                        </td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">
+                            @if($pengajuan->status === 'menunggu_persediaan')
+                                <em style="color:#999;">Menunggu pengecekan persediaan</em>
+
+                            @elseif($item->status_persediaan === 'ADA')
+                                <span style="color:#2e7d32; font-weight:600;">
+                                    ✔ Tersedia di persediaan
+                                </span>
+
+                            @elseif($item->status_persediaan === 'SEBAGIAN')
+                                <span style="color:#ef6c00; font-weight:600;">
+                                    ⚠ Sebagian tersedia ({{ $item->jumlah_tersedia }})
+                                </span>
+
+                            @elseif($item->status_persediaan === 'TIDAK_ADA')
+                                <span style="color:#c62828; font-weight:600;">
+                                    ✖ Tidak tersedia (pengadaan)
+                                </span>
+
+                            @else
+                                <span style="color:#999;">-</span>
                             @endif
                         </td>
                     @elseif($pengajuan->jenis_pengajuan === 'kerusakan')
@@ -118,69 +152,63 @@
     </table>
 
     <!-- Tanda Tangan -->
-    @php
-        $status = strtolower($pengajuan->status ?? '');
-
-        $isApprovedMengetahui = in_array($status, [
-            'pending_ppk',
-            'approved_mengetahui',
-            'approved_adum'
-        ]);
-
-        $isRejectedMengetahui = in_array($status, [
-            'rejected_mengetahui',
-            'rejected_adum'
-        ]);
-
-        $mengetahui_user = $pengajuan->mengetahui_id 
-            ? $pengajuan->mengetahui 
-            : $pengajuan->adum;
-    @endphp
-
     <div style="display:flex; justify-content:space-between; margin-top:100px;">
+        {{-- ================= MENGETAHUI ================= --}}
+        @php
+            $rolePembuat = $pengajuan->user->role;
+            $mengetahui_user = null;
 
-    {{-- MENGETAHUI --}}
-    <div style="flex:1; text-align:center;">
-        <div>MENGETAHUI</div>
-            <div>{{ strtoupper($mengetahui_user->role ?? 'TIMKER') }}</div>
+            // 1. Jika pembuat adalah anggota timker → mengetahui = ketua timker
+            if (str_starts_with($rolePembuat, 'anggota_timker_')) {
+                $index = str_replace('anggota_timker_', '', $rolePembuat);
+                $mengetahui_user = \App\Models\User::where('role', 'timker_' . $index)->first();
+            }
+
+            // 2. Jika pembuat adalah ketua timker → mengetahui = ketua timker itu sendiri
+            elseif (str_starts_with($rolePembuat, 'timker_')) {
+                $mengetahui_user = \App\Models\User::where('role', $rolePembuat)->first();
+            }
+
+            // 3. Bukan timker → mengetahui = ADUM
+            else {
+                $mengetahui_user = \App\Models\User::where('role', 'adum')->first();
+            }
+        @endphp
+
+        <div style="flex:1; text-align:center;">
+            <div>MENGETAHUI</div>
+            <div>{{ strtoupper($mengetahui_user->jabatan ?? $mengetahui_user->role ?? '-') }}</div>
 
             <div style="margin-top:60px;">
-                @if($isApprovedMengetahui)
+                @if($pengajuan->mengetahui_approved_at)
                     <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
-                    {{ $mengetahui_user->name ?? '-' }}<br>
-                    NIP. {{ $mengetahui_user->nip ?? '-' }}<br>
-                    <small>{{ $pengajuan->mengetahui_approved_at ?? $pengajuan->adum_approved_at }}</small>
-
-                @elseif($isRejectedMengetahui)
-                    <div style="color:red; font-weight:bold;">REJECTED</div>
-                    {{ $mengetahui_user->name ?? '-' }}<br>
-                    NIP. {{ $mengetahui_user->nip ?? '-' }}<br>
-                    <small>{{ $pengajuan->mengetahui_approved_at ?? $pengajuan->adum_approved_at }}</small>
-
+                    <div>{{ $mengetahui_user->name ?? '-' }}</div>
+                    <div>NIP. {{ $mengetahui_user->nip ?? '-' }}</div>
+                    <small>{{ $pengajuan->mengetahui_approved_at }}</small>
                 @else
                     <em style="color:red;">Tanda tangan menunggu approve</em>
                 @endif
             </div>
         </div>
 
-        {{-- MENYETUJUI --}}
+        {{-- ================= MENYETUJUI (PPK) ================= --}}
         <div style="flex:1; text-align:center;">
             <div>MENYETUJUI</div>
             <div>Pejabat Pembuat Komitmen</div>
 
             <div style="margin-top:60px;">
-                @if($pengajuan->ppk_id)
+                @if($pengajuan->ppk_approved_at)
                     <div style="opacity:0.5; font-weight:bold;">APPROVED</div>
-                    {{ $pengajuan->ppk->name ?? 'Nama PPK' }}<br>
-                    NIP. {{ $pengajuan->ppk->nip ?? '-' }}<br>
-                    <small>{{ $pengajuan->ppk_approved_at ? \Carbon\Carbon::parse($pengajuan->ppk_approved_at)->format('d M Y H:i') : '' }}</small>
+                    <div>{{ $pengajuan->ppk->name }}</div>
+                    <div>NIP. {{ $pengajuan->ppk->nip }}</div>
+                    <small>{{ $pengajuan->ppk_approved_at }}</small>
                 @else
                     <em style="color:red;">Tanda tangan menunggu approve</em>
                 @endif
             </div>
         </div>
 
-        {{-- PENANGGUNG JAWAB --}}
+        {{-- ================= PENANGGUNG JAWAB ================= --}}
         <div style="flex:1; text-align:center;">
             <div>PENANGGUNG JAWAB</div>
 
@@ -191,7 +219,6 @@
         </div>
 
     </div>
-
 
 </div>
 @endsection

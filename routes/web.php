@@ -16,6 +16,7 @@ use App\Http\Controllers\KroController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\VerifikatorController;
 use App\http\Controllers\AnggotaTimkerController;
+use App\http\Controllers\PersediaanController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -52,13 +53,31 @@ Route::middleware('auth')->group(function () {
     Route::post('/pegawai/pengajuan', [PengajuanController::class, 'store'])->name('pegawai.pengajuan.store');
     Route::get('/pegawai/daftar-pengajuan', [PengajuanController::class, 'index'])->name('pegawai.daftar-pengajuan');
     Route::get('/pegawai/pengajuan/{pengajuan}', [PengajuanController::class, 'show'])->name('pegawai.pengajuan.show');
+
 });
+
+//**Persediaan */
+Route::middleware(['auth'])->prefix('persediaan')->name('persediaan.')->group(function () {
+    Route::get('/dashboard', [PersediaanController::class, 'dashboard'])->name('dashboard');
+    Route::get('/pengajuan', [PersediaanController::class, 'pengajuanMasuk'])->name('pengajuan');
+    Route::get('/pengajuan/{id}', [PersediaanController::class, 'detailPengajuan'])->name('pengajuan.detail');
+    Route::post('/pengajuan/item/{item_id}/status', [PersediaanController::class, 'updateItemStatus'])->name('item.updateStatus');
+    Route::post('/pengajuan/{pengajuan_id}/finalize',[PersediaanController::class, 'finalizePengajuan'])->name('finalize');
+    Route::get('/pengeluaran/{pengajuan_id}/create', [PersediaanController::class, 'formPengeluaran'])->name('formPengeluaran');
+    Route::post('/pengeluaran/store', [PersediaanController::class, 'simpanPengeluaran'])->name('pengeluaran.store');
+    Route::get('/draft', [PersediaanController::class, 'draft'])->name('draft');
+    Route::get('/draft/{id}', [PersediaanController::class, 'detailDraft'])->name('draft.detail');
+    Route::get('/pengeluaran/{id}/pdf', [PersediaanController::class, 'cetakPdf'])->name('pengeluaran.pdf');
+});
+
 
 //*Anggota Timker*/
 Route::prefix('anggota_timker')->middleware('auth')->group(function () {
     Route::get('/dashboard', [AnggotaTimkerController::class, 'dashboard'])->name('anggota_timker.dashboard');
     Route::get('/pengajuan', [AnggotaTimkerController::class, 'daftarPengajuan'])->name('anggota_timker.index');
     Route::get('/pengajuan/create', [AnggotaTimkerController::class, 'create'])->name('anggota_timker.create');
+    Route::get('/show/{id}', [AnggotaTimkerController::class, 'show'])->name('anggota_timker.show');
+
 });
 
 
@@ -99,6 +118,14 @@ Route::prefix('pengadaan')->middleware('auth')->group(function(){
 //**ADUM/PPK */
 Route::middleware(['auth'])->group(function() {
 
+    // Route untuk semua role yang bisa lihat detail pengajuan
+    Route::get('/adum/dashboard', [ApproveController::class, 'dashboard'])->name('adum.dashboard');
+    Route::get('/ppk/dashboard', [ApproveController::class, 'dashboard'])->name('ppk.dashboard');
+    Route::prefix('timker')->name('timker.')->group(function() {
+        Route::get('/dashboard', [ApproveController::class, 'dashboard'])->name('dashboard');
+    });
+
+
     // Timker1–timker6
     foreach (range(1,6) as $i) {
         $role = 'timker_'.$i;
@@ -122,12 +149,14 @@ Route::middleware(['auth'])->group(function() {
             ->name('pengajuan.kategori');
 
     });
+    
 });
 
 // PPK
 Route::prefix('ppk')->name('ppk.')->group(function() {
     Route::get('/dashboard', [PpkController::class, 'dashboard'])->name('dashboard');
     Route::post('/update-kro/{id}', [PpkController::class, 'updateKRO'])->name('ppk.updateKRO');
+    Route::post('/update-catatan/{id}', [PpkController::class, 'updateCatatan']);
     Route::get('/approve', [PpkController::class, 'approvedList'])->name('approve');
     Route::get('/{id}', [PpkController::class, 'show'])->name('show');
     Route::post('/{id}/store-group', [PpkController::class, 'storeGroup'])->name('storeGroup');

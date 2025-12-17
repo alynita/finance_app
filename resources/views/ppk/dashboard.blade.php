@@ -58,6 +58,7 @@
             <thead>
                 <tr style="background:#f2f2f2;">
                     <th style="border:1px solid #ccc; padding:0.5rem;">No</th>
+                    <th style="border:1px solid #ccc; padding:0.5rem;">Kode</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Nama Kegiatan</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Diajukan Oleh</th>
                     <th style="border:1px solid #ccc; padding:0.5rem;">Tanggal Pengajuan</th>
@@ -69,6 +70,7 @@
                 @foreach($pengajuans as $key => $pengajuan)
                     <tr>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $key + 1 }}</td>
+                        <td style="border:1px solid #ccc; padding:0.5rem;">{{ $pengajuan->kode_pengajuan ?? '-' }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $pengajuan->nama_kegiatan ?? '-' }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $pengajuan->user->name ?? '-' }}</td>
                         <td style="border:1px solid #ccc; padding:0.5rem;">{{ $pengajuan->created_at->format('d M Y') }}</td>

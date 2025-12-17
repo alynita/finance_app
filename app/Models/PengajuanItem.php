@@ -54,6 +54,11 @@ class PengajuanItem extends Model
         return $this->belongsTo(PpkGroup::class, 'ppk_group_id');
     }
 
+    public function pengeluaranItem()
+    {
+        return $this->hasOne(PengeluaranBarangItem::class, 'pengajuan_item_id');
+    }
+
     // 💡 otomatis hitung jumlah_dana_pengajuan saat membuat item
     protected static function booted()
     {
@@ -70,4 +75,5 @@ class PengajuanItem extends Model
             }
         });
     }
+
 }

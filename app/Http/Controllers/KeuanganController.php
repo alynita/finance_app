@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use \App\Models\Honor;
 use \App\Models\KroAccount;
 use \App\Models\HonorDetail;
+use App\Helpers\NotifikasiHelper;
 use \App\Models\User;
 
 class KeuanganController extends Controller
@@ -110,6 +111,21 @@ class KeuanganController extends Controller
             'status' => 'processed',
             'kode_akun' => $request->kode_akun ?? $group->kode_akun,
         ]);
+
+        // Kirim notifikasi ke ADUM
+        $pesanAdum = "Grup ID {$group->id} telah diproses oleh Keuangan. Silakan cek untuk tindakan selanjutnya.";
+
+        // Kirim notifikasi ke Bendahara (arsip)
+        $pesanBendahara = "Grup ID {$group->id} telah masuk arsip. Silakan cek data.";
+
+        // Kalau di local environment, jangan kirim email, cukup log
+        if (app()->environment('local')) {
+            \Log::info("Email NOT sent: {$pesanAdum} -> adum");
+            \Log::info("Email NOT sent: {$pesanBendahara} -> bendahara");
+        } else {
+            NotifikasiHelper::kirim($group->pengajuan, 'adum', $pesanAdum);
+            NotifikasiHelper::kirim($group->pengajuan, 'bendahara', $pesanBendahara);
+        }
 
         return redirect()->route('keuangan.laporan')->with('success', 'Proses keuangan berhasil disimpan!');
     }

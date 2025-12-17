@@ -55,6 +55,7 @@ class AuthenticatedSessionController extends Controller
             case 'sarpras': return redirect()->intended('/sarpras/dashboard');
             case 'bmn': return redirect()->intended('/bmn/dashboard');
             case 'pengadaan': return redirect()->intended('/pengadaan/dashboard');
+            case 'persediaan': return redirect()->intended('/persediaan/dashboard');
             case 'adum': return redirect()->intended('/adum/dashboard');
             // KETUA TIMKER (timker_1 sampai timker_6)
             case (str_starts_with($user->role, 'timker_')):
